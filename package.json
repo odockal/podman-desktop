@@ -41,7 +41,7 @@
     "test": "npm run test:main && npm run test:preload && npm run test:preload-docker-extension && npm run test:renderer && npm run test:e2e && npm run test:extensions",
     "test:e2e": "npm run build && xvfb-maybe vitest run tests/*spec* --no-color",
     "test:e2elocal": "xvfb-maybe vitest run tests/*local.test.ts --no-color",
-    "test:playwright": "xvfb-maybe vitest run tests/*playwright.test.ts --no-color",
+    "test:playwright": "xvfb-maybe vitest run tests/e2e-playwright.test.ts --no-color",
     "test:main": "vitest run -r packages/main --passWithNoTests --coverage",
     "test:preload": "vitest run -r packages/preload --passWithNoTests --coverage",
     "test:preload-docker-extension": "vitest run -r packages/preload-docker-extension --passWithNoTests --coverage",

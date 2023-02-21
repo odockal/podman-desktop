@@ -2,21 +2,34 @@ import { describe, beforeAll, afterAll, test } from 'vitest';
 import { expect } from '@playwright/test';
 import { Locator, _electron as electron } from 'playwright';
 import type { ElectronApplication } from 'playwright';
+import * as os from 'os';
+import path from 'path';
 
 describe('E2E test using playwright', () => {
     let electronApp: ElectronApplication;
     const electronAppRoot = '.';
-    const electronAppPath = process.env.PODMAN_DESKTOP_BINARY ? process.env.PODMAN_DESKTOP_BINARY : '/home/odockal/git/podman-desktop/dist/linux-unpacked/podman-desktop';
-    // const electronAppPath = '/home/odockal/Apps/podman/podman-desktop-0.12.0/podman-desktop';
+    const binaryPathWindows = path.join('win-unpacked', 'Podman Desktop.exe');
+    const binaryPathLinux = path.join('linux-unpacked', 'podman-desktop');
+    const distPath = path.join(__dirname, '../', 'dist');
+    const localBinaryPath = path.join(distPath, os.platform() === 'win32' ? binaryPathWindows : os.platform() === 'linux' ? binaryPathLinux: '');
+    const electronAppPath = process.env.PODMAN_DESKTOP_BINARY ? process.env.PODMAN_DESKTOP_BINARY : localBinaryPath;
     // const electronAppPath = '.';
     beforeAll(async () => {
       electronApp = await electron.launch({ 
-        // args: [electronAppRoot, '--disable_splash_screen', '--no-sandbox', '--enable-logging' ],
+        args: [
+          // electronAppRoot,
+          // '--no-sandbox',
+          // '--whitelisted-ips',
+          // '--enable-logging',
+          // '--disable-gpu',
+          // '--disable-software-rasterizer',
+          // '--unhandled-rejections=strict',
+          // '--trace-warnings',
+          // '--disable_splash_screen',
+        ],
         executablePath: electronAppPath,
       });
-      electronApp.addListener("close", () => {
-        console.log('Close event is called');
-      });
+      electronApp.process().stderr.on('data', (error) => console.log(`stderr: ${error}`));
     });
   
     afterAll(async () => {
@@ -33,6 +46,8 @@ describe('E2E test using playwright', () => {
           });
           console.log(`properties: path: ${appProperties.path}, name: ${appProperties.name}, version: ${appProperties.version}`);
           const page = await electronApp.firstWindow();
+          // const window = await electronApp.waitForEvent('window');
+          // console.log(`window: ${await window.innerText('#app')}`);
           // Print the title.
           console.log(`windows title: ${await page.title()}`);
           expect(await page.title()).toBeDefined();
