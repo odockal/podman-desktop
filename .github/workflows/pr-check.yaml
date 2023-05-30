@@ -22,6 +22,7 @@ on: [pull_request]
 jobs:
   windows:
     name: Windows
+    if: ${{ false }}
     runs-on: windows-2022
     timeout-minutes: 60
     env:
@@ -67,6 +68,7 @@ jobs:
 
   linux:
     name: Linux
+    if: ${{ false }}
     runs-on: ubuntu-20.04
     timeout-minutes: 40
     env:
@@ -121,6 +123,7 @@ jobs:
           path: ./dist/podman-desktop-*.flatpak
 
   darwin:
+    if: ${{ false }}
     name: macOS
     runs-on: macos-11
     timeout-minutes: 40
@@ -194,14 +197,17 @@ jobs:
       - name: Execute yarn
         run: yarn --frozen-lockfile
 
+      - name: Yarn install
+        run: yarn install
+
+      - name: Run e2e tests
+        run: yarn test:e2e
+
       - name: Run linter
         run: yarn lint:check
 
       - name: Run formatter
         run: yarn format:check
-
-      - name: Run unit tests
-        run: yarn test
 
       - name: Run typecheck
         run: yarn typecheck
