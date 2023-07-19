@@ -3,19 +3,14 @@ import type { ElectronApplication, JSHandle, Page } from 'playwright';
 import { _electron as electron } from 'playwright';
 import { afterAll, beforeAll, expect, test, describe } from 'vitest';
 import { expect as playExpect } from '@playwright/test';
-import { existsSync } from 'node:fs';
-import { rm } from 'node:fs/promises';
+import { removeFolderIfExists } from './util/testUtility';
 
-const navBarItems = ['Dashboard', 'Containers', 'Images', 'Pods', 'Volumes', 'Settings'];
 let electronApp: ElectronApplication;
 let page: Page;
 
 beforeAll(async () => {
-  // remove all videos/screenshots
-  if (existsSync('tests/output')) {
-    console.log('Cleaning up output folder...');
-    await rm('tests/output', { recursive: true, force: true });
-  }
+  // clean up temporary podman-desktop configuration folder
+  await removeFolderIfExists('tests/output/podman-desktop');
 
   const env: { [key: string]: string } = Object.assign({}, process.env as { [key: string]: string });
   env.PODMAN_DESKTOP_HOME_DIR = 'tests/output/podman-desktop';
@@ -103,17 +98,6 @@ describe('Basic e2e verification of podman desktop start', async () => {
       // check we have the dashboard page
       const dashboardTitle = page.getByRole('heading', { name: 'Dashboard' });
       await playExpect(dashboardTitle).toBeVisible();
-    });
-  });
-
-  describe('Navigation Bar test', async () => {
-    test('Verify navigation items are present', async () => {
-      const navBar = page.getByRole('navigation', { name: 'AppNavigation' });
-      await playExpect(navBar).toBeVisible();
-      for (const item of navBarItems) {
-        const locator = navBar.getByRole('link', { name: item, exact: true });
-        await playExpect(locator).toBeVisible();
-      }
     });
   });
 });

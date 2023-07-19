@@ -41,7 +41,9 @@
     "compile:current": "cross-env MODE=production npm run build && electron-builder build --config .electron-builder.config.cjs",
     "test": "npm run test:unit && npm run test:e2e:smoke",
     "test:unit": "npm run test:main && npm run test:preload && npm run test:preload-docker-extension && npm run test:renderer && npm run test:tools && npm run test:extensions",
-    "test:e2e:smoke": "cross-env NODE_ENV=development MODE=development DEBUG=pw:browser npm run build && xvfb-maybe vitest run tests/src/e2e-smoke.spec.ts",
+    "test:e2e:build": "cross-env NODE_ENV=development MODE=development DEBUG=pw:browser npm run build",
+    "test:e2e:smoke": "npm run test:e2e:build && xvfb-maybe vitest run tests/src/*smoke.spec.ts --threads false --sequence.hooks stack",
+    "test:e2e:full": "npm run test:e2e:build && xvfb-maybe vitest run tests --threads false",
     "test:main": "vitest run -r packages/main --passWithNoTests --coverage",
     "test:preload": "vitest run -r packages/preload --passWithNoTests --coverage",
     "test:preload-docker-extension": "vitest run -r packages/preload-docker-extension --passWithNoTests --coverage",
@@ -82,8 +84,8 @@
     "*.{md,css,json}": "prettier --write"
   },
   "devDependencies": {
-    "@commitlint/cli": "^17.6.7",
-    "@commitlint/config-conventional": "^17.6.7",
+    "@commitlint/cli": "^17.6.6",
+    "@commitlint/config-conventional": "^17.6.6",
     "@playwright/test": "^1.36.1",
     "@rollup/plugin-commonjs": "^25.0.3",
     "@rollup/plugin-json": "^6.0.0",

@@ -1480,7 +1480,7 @@
   resolved "https://registry.yarnpkg.com/@colors/colors/-/colors-1.5.0.tgz#bb504579c1cae923e6576a4f5da43d25f97bdbd9"
   integrity sha512-ooWCrlZP11i8GImSjTHYHLkvFDP48nS4+204nGb1RiX/WXYHmJA2III9/e2DWVabCESdW7hBAEzHRqUn9OUVvQ==
 
-"@commitlint/cli@^17.6.7":
+"@commitlint/cli@^17.6.6":
   version "17.6.7"
   resolved "https://registry.yarnpkg.com/@commitlint/cli/-/cli-17.6.7.tgz#1d352a6cfdb6b6a6ae49a959e6c13dcef1b63782"
   integrity sha512-nzZmfO5KIOupYppn1MsnYX/80I+KDlxiwkks3CJT0XT+t34UgqGi3eSyEuzgcIjPlORk5/GMaAEiys78iLfGMg==
@@ -1496,7 +1496,7 @@
     resolve-global "1.0.0"
     yargs "^17.0.0"
 
-"@commitlint/config-conventional@^17.6.7":
+"@commitlint/config-conventional@^17.6.6":
   version "17.6.7"
   resolved "https://registry.yarnpkg.com/@commitlint/config-conventional/-/config-conventional-17.6.7.tgz#8469d977def36148615e9516b1a521e38ca27ddd"
   integrity sha512-4oTpEUC0HRM54QRHBPMOJW1pETp7usxXn9RuNYNWHcmu8wi1mpws95hvS20u2n6HtIkTn0jfn7vHioCm4AGUTw==
