@@ -45,8 +45,9 @@ const config = {
     /**
      * A default timeout of 5000ms is sometimes not enough for playwright.
      */
-    testTimeout: 60_000,
-    hookTimeout: 60_000,
+    testTimeout: 20_000,
+    hookTimeout: 10_000,
+    reporters: ['verbose'],
   },
   resolve: {
     alias: {

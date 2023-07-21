@@ -23,14 +23,15 @@ import { expect as playExpect } from '@playwright/test';
 import { PodmanDesktopRunner } from './runner/podman-desktop-runner';
 import { WelcomePage } from './model/pages/welcome-page';
 import { DashboardPage } from './model/pages/dashboard-page';
+import { NavigationBar } from './model/workbench/navigation';
 import { removeFolderIfExists } from './utility/cleanup';
 import { join } from 'path';
 
-const navBarItems = ['Dashboard', 'Containers', 'Images', 'Pods', 'Volumes', 'Settings'];
 let pdRunner: PodmanDesktopRunner;
 let page: Page;
 
 beforeAll(async () => {
+  // remove podman desktop custom configuration
   await removeFolderIfExists(join('tests', 'output', 'podman-desktop'));
   pdRunner = new PodmanDesktopRunner();
   page = await pdRunner.start();
@@ -102,13 +103,15 @@ describe('Basic e2e verification of podman desktop start', async () => {
   });
 
   describe('Navigation Bar test', async () => {
-    test('Verify navigation items are present', async () => {
-      const navBar = page.getByRole('navigation', { name: 'AppNavigation' });
-      await playExpect(navBar).toBeVisible();
-      for (const item of navBarItems) {
-        const locator = navBar.getByRole('link', { name: item, exact: true });
-        await playExpect(locator).toBeVisible();
-      }
+    test('Verify navigation items are visible', async () => {
+      const navigationBar = new NavigationBar(page);
+      await playExpect(navigationBar.navigationLocator).toBeVisible();
+      await playExpect(navigationBar.dashboardLink).toBeVisible();
+      await playExpect(navigationBar.imagesLink).toBeVisible();
+      await playExpect(navigationBar.podsLink).toBeVisible();
+      await playExpect(navigationBar.containersLink).toBeVisible();
+      await playExpect(navigationBar.volumesLink).toBeVisible();
+      await playExpect(navigationBar.settingsLink).toBeVisible();
     });
   });
 });

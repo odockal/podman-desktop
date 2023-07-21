@@ -22,11 +22,15 @@ import { expect as playExpect } from '@playwright/test';
 import { PodmanDesktopRunner } from './runner/podman-desktop-runner';
 import { WelcomePage } from './model/pages/welcome-page';
 import { ImagesPage } from './model/pages/images-page';
+import { NavigationBar } from './model/workbench/navigation';
+import { removeFolderIfExists } from './utility/cleanup';
+import { join } from 'path';
 
 let pdRunner: PodmanDesktopRunner;
 let page: Page;
 
 beforeAll(async () => {
+  await removeFolderIfExists(join('tests', 'output', 'podman-desktop'));
   pdRunner = new PodmanDesktopRunner();
   page = await pdRunner.start();
 
@@ -40,13 +44,9 @@ afterAll(async () => {
 
 describe('Image pull verification', async () => {
   test('Pull image', async () => {
-    const navBar = page.getByRole('navigation', { name: 'AppNavigation' });
-    const imageLink = navBar.getByRole('link', { name: 'Images' });
-    await playExpect(imageLink).toBeVisible();
-    await imageLink.click();
-
-    const imagesPage = new ImagesPage(page);
-    const pullImagePage = await imagesPage.pullImage();
+    const navBar = new NavigationBar(page);
+    const imagesPage = await navBar.openImages();
+    const pullImagePage = await imagesPage.openPullImage();
     const updatedImages = await pullImagePage.pullImage('quay.io/podman/hello');
 
     playExpect(updatedImages.imageExists('quay.io/podman/hello')).toBeTruthy();
