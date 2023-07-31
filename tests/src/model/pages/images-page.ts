@@ -29,7 +29,7 @@ export class ImagesPage extends PodmanDesktopPage {
 
   constructor(page: Page) {
     super(page);
-    this.heading = page.getByRole('heading', { name: 'Images', exact: true });
+    this.heading = page.getByRole('heading', { name: 'images', exact: true });
     this.pullImageButton = page.getByRole('button', { name: 'Pull an image' });
     this.pruneImagesButton = page.getByRole('button', { name: 'Prune images' });
     this.buildImageButton = page.getByRole('button', { name: 'Build an image' });

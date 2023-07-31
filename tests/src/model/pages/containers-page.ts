@@ -28,16 +28,18 @@ export class ContainersPage extends PodmanDesktopPage {
 
   constructor(page: Page) {
     super(page);
-    this.heading = this.page.getByRole('heading', { name: 'Containers', exact: true });
+    this.heading = this.page.getByRole('heading', { name: 'containers', exact: true });
     this.pruneContainersButton = this.page.getByRole('button', { name: 'Prune containers' });
     this.createContainerButton = this.page.getByRole('button', { name: 'Create a container' });
     this.playKubernetesYAMLButton = this.page.getByRole('button', { name: 'Play Kubernetes YAML' });
   }
 
   async getTable(): Promise<Locator> {
+    await this.page.screenshot({ path: 'tests/output/screenshots/check-page-is-empty-in-get-table.png', fullPage: true });
     if (!(await this.pageIsEmpty())) {
       return this.page.getByRole('table');
     } else {
+      await this.page.screenshot({ path: 'tests/output/screenshots/check-page-is-empty-in-get-table-error.png', fullPage: true });
       throw Error('Containers page is empty, there are no containers');
     }
   }
@@ -70,11 +72,11 @@ export class ContainersPage extends PodmanDesktopPage {
     const rows = await containersTable.getByRole('row').all();
     for (const row of rows) {
       // test on empty row - contains on 0th position &nbsp; character (ISO 8859-1 character set: 160)
-      const zeroCell = await row.getByRole('cell').nth(0).innerText();
+      const zeroCell = await row.getByRole('cell').nth(0).innerText({ timeout: 500 });
       if (zeroCell.indexOf(String.fromCharCode(160)) === 0) {
         continue;
       }
-      const thirdCell = await row.getByRole('cell').nth(3).innerText();
+      const thirdCell = (await row.getByRole('cell').nth(3).allInnerTexts()).join();
       const index = thirdCell.indexOf(name);
       if (index >= 0) {
         return row;

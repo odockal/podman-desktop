@@ -28,7 +28,6 @@ jobs:
   website-build:
     name: build website
     runs-on: ubuntu-22.04
-    if: false
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3

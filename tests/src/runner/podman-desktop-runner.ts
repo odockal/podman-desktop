@@ -53,9 +53,6 @@ export class PodmanDesktopRunner {
     // Direct Electron console to Node terminal.
     this.getPage().on('console', console.log);
 
-    this._app.process().stdout?.on('data', data => {
-      console.log(`STDOUT: ${data}`);
-    });
     this._app.process().stderr?.on('data', data => {
       console.log(`STDERR: ${data}`);
     });
@@ -84,7 +81,7 @@ export class PodmanDesktopRunner {
   }
 
   public async screenshot(filename: string) {
-    await this.getPage().screenshot({ path: join(this._testOutput, 'screenshots', filename), fullPage: true });
+    await this.getPage().screenshot({ path: join(this._testOutput, 'screenshots', filename)});
   }
 
   public async close() {
@@ -112,6 +109,25 @@ export class PodmanDesktopRunner {
         },
       },
     };
+  }
+
+  async closeDevTools(): Promise<void> {
+    const window: JSHandle<BrowserWindow> = await this.getBrowserWindow();
+
+      const windowState = await window.evaluate((mainWindow): Promise<void> => {
+        mainWindow.webContents.closeDevTools();
+        return Promise.resolve();
+      });
+  }
+
+  async openDevToolsInDettachedMode(): Promise<void> {
+    const window: JSHandle<BrowserWindow> = await this.getBrowserWindow();
+
+      const windowState = await window.evaluate((mainWindow): Promise<void> => {
+        mainWindow.setFullScreen(true);
+        mainWindow.webContents.openDevTools({ mode: 'detach' });
+        return Promise.resolve();
+      });
   }
 
   private setupPodmanDesktopCustomFolder(): object {

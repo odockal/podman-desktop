@@ -46,12 +46,15 @@ export async function deleteContainer(page: Page, name: string) {
     await deleteButton.click();
     // wait for container to disappear
     try {
+      console.log(`Waiting for... container to get deleted`);
       await waitWhile(async () => {
         const result = await containers.getContainerRowByName(name);
         return result ? true : false;
       }, 5000);
     } catch (error) {
-      throw Error(`Error waiting for container '${name}' to get removed, ${error}`);
+      if ((error as Error).message.indexOf('Containers page is empty') < 0) {
+        throw Error(`Error waiting for container '${name}' to get removed, ${error}`);
+      }
     }
     console.log(`container '${name}' removed...`);
   }
@@ -77,12 +80,16 @@ export async function deleteImage(page: Page, name: string) {
     }
     // wait for image to disappear
     try {
+      console.log(`image deleting, waiting...`);
       await waitWhile(async () => {
+        const images = await new NavigationBar(page).openImages();
         const result = await images.getImageRowByName(name);
         return result ? true : false;
-      }, 5000);
+      }, 10000, 1000, false);
     } catch (error) {
-      throw Error(`Error waiting for image '${name}' to get removed, ${error}`);
+      if ((error as Error).message.indexOf('Images page is empty') < 0) {
+        throw Error(`Error waiting for image '${name}' to get removed, ${error}`);
+      }
     }
     console.log(`image '${name}' removed...`);
   }

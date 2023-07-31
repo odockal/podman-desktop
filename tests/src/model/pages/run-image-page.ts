@@ -19,6 +19,7 @@
 import type { Locator, Page } from 'playwright';
 import { PodmanDesktopPage } from './base-page';
 import { ContainersPage } from './containers-page';
+import { waitWhile } from '../../utility/wait';
 
 export class RunImagePage extends PodmanDesktopPage {
   readonly name: Locator;
@@ -52,6 +53,9 @@ export class RunImagePage extends PodmanDesktopPage {
     }
     await this.startContainerButton.waitFor({ state: 'visible', timeout: 1000 });
     await this.startContainerButton.click();
-    return new ContainersPage(this.page);
+    // wait for containers page to appear
+    const containers = new ContainersPage(this.page);
+    await containers.heading.waitFor({ state: 'visible', timeout: 2000 });
+    return containers;
   }
 }

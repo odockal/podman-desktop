@@ -32,12 +32,15 @@ beforeAll(async () => {
   pdRunner = new PodmanDesktopRunner();
   page = await pdRunner.start();
 
+  // await pdRunner.openDevToolsInDettachedMode();
+
   const welcomePage = new WelcomePage(page);
   await welcomePage.handleWelcomePage(true);
 });
 
 afterAll(async () => {
   console.log('AfterAll pull image');
+  await pdRunner.screenshot('pull-image-after-all.png');
   await pdRunner.close();
 });
 
@@ -60,5 +63,6 @@ describe('Image pull verification', async () => {
     await playExpect(imageDetailPage.summaryTab).toBeVisible();
     await playExpect(imageDetailPage.historyTab).toBeVisible();
     await playExpect(imageDetailPage.inspectTab).toBeVisible();
+    pdRunner.screenshot('pull-image-check-details.png');
   });
 });

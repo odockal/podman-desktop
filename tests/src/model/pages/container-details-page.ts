@@ -19,6 +19,8 @@
 import type { Locator, Page } from 'playwright';
 import { PodmanDesktopPage } from './base-page';
 import { ContainersPage } from './containers-page';
+import { ContainerState } from '../constants/enums';
+import { waitUntil } from '../../utility/wait';
 
 export class ContainerDetailsPage extends PodmanDesktopPage {
   readonly labelName: Locator;
@@ -64,12 +66,13 @@ export class ContainerDetailsPage extends PodmanDesktopPage {
 
   async stopContainer(failIfStopped = false): Promise<void> {
     try {
+      await waitUntil(async () => await this.getState() === ContainerState.Running, 3000, 900);
       const stopButton = this.page.getByRole('button').and(this.page.getByLabel('Stop Container'));
       await stopButton.waitFor({ state: 'visible', timeout: 2000 });
       await stopButton.click();
     } catch (error) {
       if (failIfStopped) {
-        throw Error(`Container not running, stop button not available: ${error}`);
+        throw Error(`Container is not running, its state is: ${await this.getState()}, stop button not available: ${error}`);
       }
     }
   }

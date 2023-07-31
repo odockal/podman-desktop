@@ -232,6 +232,16 @@ jobs:
         id: yarn-cache-dir-path
         run: echo "dir=$(yarn cache dir)" >> ${GITHUB_OUTPUT}
 
+      - name: bump podman to 4.6
+        run: |
+          sudo sh -c "echo 'deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_22.04/ /' > /etc/apt/sources.list.d/devel:kubic:libcontainers:unstable.list"
+          curl -L https://build.opensuse.org/projects/devel:kubic:libcontainers:unstable/signing_keys/download?kind=gpg | sudo apt-key add -
+          sudo apt-get update -qq
+          sudo apt-get install -y podman
+
+      - name: Check podman Version
+        run: podman version
+
       - uses: actions/cache@v3
         id: yarn-cache
         with:

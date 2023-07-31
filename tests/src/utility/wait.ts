@@ -21,14 +21,19 @@ export async function wait(
   until: boolean,
   timeout: number,
   diff: number,
+  sendError: boolean,
   errorMessage: string,
 ): Promise<void> {
   let time = timeout;
+  console.log(`total time: ${time}`);
   while (time > 0) {
-    if ((await waitFunction()) === until) {
+    const waitFuncResult = await waitFunction();
+    console.log(`Testing result of wait function: '${waitFuncResult}' against '${until}'`);
+    if (waitFuncResult === until) {
       return;
     }
     time = time - diff;
+    console.log(`remaining time: ${time}`);
     await delay(diff);
   }
   const message =
@@ -37,7 +42,12 @@ export async function wait(
           until,
         )}'`
       : errorMessage;
-  throw Error(message);
+  console.log(`SendError: ${sendError}`);
+  if (sendError) {
+    throw Error(message);
+  } else {
+    console.log(`Warning: ${message}`);
+  }
 }
 
 /**
@@ -49,8 +59,8 @@ export async function wait(
  *
  * Example: await waitUntil(() => dialogIsOpen(), 1000, 250, 'Dialog window was not openend as expected in 1 s');
  */
-export async function waitUntil(waitFunction: () => Promise<boolean>, timeout = 3000, diff = 500): Promise<void> {
-  await wait(waitFunction, true, timeout, diff, '');
+export async function waitUntil(waitFunction: () => Promise<boolean>, timeout = 3000, diff = 500, sendError = true, message = ''): Promise<void> {
+  await wait(waitFunction, true, timeout, diff, sendError, message);
 }
 
 /**
@@ -62,8 +72,8 @@ export async function waitUntil(waitFunction: () => Promise<boolean>, timeout = 
  *
  * Example: await waitWhile(() => dialogIsOpen(), 1000, 250, 'Dialog window was not closed as expected in 1 s');
  */
-export async function waitWhile(waitFunction: () => Promise<boolean>, timeout = 3000, diff = 500): Promise<void> {
-  await wait(waitFunction, false, timeout, diff, '');
+export async function waitWhile(waitFunction: () => Promise<boolean>, timeout = 3000, diff = 500, sendError = true, message = ''): Promise<void> {
+  await wait(waitFunction, false, timeout, diff, sendError, message);
 }
 
 /**
@@ -74,5 +84,20 @@ export async function waitWhile(waitFunction: () => Promise<boolean>, timeout = 
 export async function delay(ms: number): Promise<void> {
   return new Promise(resolve => {
     setTimeout(resolve, ms);
+  });
+}
+
+export async function executeWithTimeout(callback: () => {}, timeout: number, error = 'Timeout reached while waiting for a function to finish') {
+  let cancelTimeout: NodeJS.Timeout;
+
+  const timeoutPromise = new Promise((_, reject) => {
+    cancelTimeout = setTimeout(() => {
+      reject(new Error(error));
+    }, timeout);
+  });
+
+  return Promise.race([callback, timeoutPromise]).then(result => {
+    clearTimeout(cancelTimeout);
+    return result;
   });
 }

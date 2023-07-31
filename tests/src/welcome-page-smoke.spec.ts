@@ -32,6 +32,7 @@ beforeAll(async () => {
   console.log('BeforeAll welcome');
   pdRunner = new PodmanDesktopRunner('', 'welcome-podman-desktop');
   page = await pdRunner.start();
+  // await pdRunner.openDevToolsInDettachedMode();
 });
 
 afterAll(async () => {
@@ -42,16 +43,17 @@ afterAll(async () => {
 describe('Basic e2e verification of podman desktop start', async () => {
   describe('Welcome page handling', async () => {
     test('Check the Welcome page is displayed', async () => {
-      console.log('Displayed welcome');
       const window: JSHandle<BrowserWindow> = await pdRunner.getBrowserWindow();
 
       const windowState = await window.evaluate(
         (mainWindow): Promise<{ isVisible: boolean; isDevToolsOpened: boolean; isCrashed: boolean }> => {
-          const getState = () => ({
+          const getState = () => {
+            // mainWindow.webContents.closeDevTools();
+            return ({
             isVisible: mainWindow.isVisible(),
             isDevToolsOpened: mainWindow.webContents.isDevToolsOpened(),
             isCrashed: mainWindow.webContents.isCrashed(),
-          });
+          })};
 
           return new Promise(resolve => {
             /**
@@ -60,10 +62,11 @@ describe('Basic e2e verification of podman desktop start', async () => {
              */
             if (mainWindow.isVisible()) {
               resolve(getState());
-            } else mainWindow.once('ready-to-show', () => resolve(getState()));
+            } else {
+              mainWindow.once('ready-to-show', () => resolve(getState()));
+            }
           });
-        },
-      );
+        });
       expect(windowState.isCrashed, 'The app has crashed').toBeFalsy();
       expect(windowState.isVisible, 'The main window was not visible').toBeTruthy();
 
@@ -110,8 +113,10 @@ describe('Basic e2e verification of podman desktop start', async () => {
       await playExpect(navigationBar.navigationLocator).toBeVisible();
       await playExpect(navigationBar.dashboardLink).toBeVisible();
       await playExpect(navigationBar.imagesLink).toBeVisible();
+      await navigationBar.openImages();
       await playExpect(navigationBar.podsLink).toBeVisible();
       await playExpect(navigationBar.containersLink).toBeVisible();
+      await navigationBar.openContainers();
       await playExpect(navigationBar.volumesLink).toBeVisible();
       await playExpect(navigationBar.settingsLink).toBeVisible();
     });
