@@ -27,12 +27,14 @@ export class PodmanDesktopRunner {
   private _app: ElectronApplication | undefined;
   private _page: Page | undefined;
   private readonly _profile: string;
+  private readonly _customFolder;
   private readonly _testOutput: string;
 
-  constructor(profile = '') {
+  constructor(profile = '', customFolder = 'podman-desktop') {
     this._running = false;
     this._profile = profile;
     this._testOutput = join('tests', 'output', this._profile);
+    this._customFolder = join(this._testOutput, customFolder);
     this._options = this.defaultOptions();
   }
 
@@ -50,6 +52,13 @@ export class PodmanDesktopRunner {
     this._page = await this.getElectronApp().firstWindow();
     // Direct Electron console to Node terminal.
     this.getPage().on('console', console.log);
+
+    this._app.process().stdout?.on('data', data => {
+      console.log(`STDOUT: ${data}`);
+    });
+    this._app.process().stderr?.on('data', data => {
+      console.log(`STDERR: ${data}`);
+    });
 
     return this._page;
   }
@@ -107,7 +116,7 @@ export class PodmanDesktopRunner {
 
   private setupPodmanDesktopCustomFolder(): object {
     const env: { [key: string]: string } = Object.assign({}, process.env as { [key: string]: string });
-    const dir = join(this._testOutput, 'podman-desktop');
+    const dir = join(this._customFolder);
     console.log(`podman desktop custom config will be written to: ${dir}`);
     env.PODMAN_DESKTOP_HOME_DIR = dir;
     return env;

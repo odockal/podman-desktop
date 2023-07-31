@@ -49,7 +49,7 @@ export async function deleteContainer(page: Page, name: string) {
       await waitWhile(async () => {
         const result = await containers.getContainerRowByName(name);
         return result ? true : false;
-      });
+      }, 5000);
     } catch (error) {
       throw Error(`Error waiting for container '${name}' to get removed, ${error}`);
     }
@@ -80,7 +80,7 @@ export async function deleteImage(page: Page, name: string) {
       await waitWhile(async () => {
         const result = await images.getImageRowByName(name);
         return result ? true : false;
-      });
+      }, 5000);
     } catch (error) {
       throw Error(`Error waiting for image '${name}' to get removed, ${error}`);
     }

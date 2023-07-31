@@ -24,8 +24,6 @@ import { WelcomePage } from './model/pages/welcome-page';
 import { NavigationBar } from './model/workbench/navigation';
 import { delay, waitWhile } from './utility/wait';
 import { deleteContainer, deleteImage } from './utility/operations';
-import { removeFolderIfExists } from './utility/cleanup';
-import { join } from 'path';
 
 let pdRunner: PodmanDesktopRunner;
 let page: Page;
@@ -34,7 +32,7 @@ const imageTag = 'latest';
 const containerToRun = 'alpine';
 
 beforeAll(async () => {
-  await removeFolderIfExists(join('tests', 'output', 'podman-desktop'));
+  console.log('BeforeAll containers');
   pdRunner = new PodmanDesktopRunner();
   page = await pdRunner.start();
   const welcomePage = new WelcomePage(page);
@@ -43,9 +41,10 @@ beforeAll(async () => {
   await delay(5000);
   await deleteContainer(page, containerToRun);
   await deleteImage(page, imageToPull);
-}, 15000);
+}, 30000);
 
 afterAll(async () => {
+  console.log('AfterAll containers');
   await deleteContainer(page, containerToRun);
   await deleteImage(page, imageToPull);
   await pdRunner.close();
@@ -53,6 +52,7 @@ afterAll(async () => {
 
 describe('Verification of container creation workflow', async () => {
   test(`Pulling of '${imageToPull}:${imageTag}' image`, async () => {
+    console.log('Pulling image containers');
     const navigationBar = new NavigationBar(page);
     let images = await navigationBar.openImages();
     const pullImagePage = await images.openPullImage();
@@ -64,6 +64,7 @@ describe('Verification of container creation workflow', async () => {
   }, 60000);
 
   test(`Start a container '${containerToRun}'`, async () => {
+    console.log('start containers');
     const navigationBar = new NavigationBar(page);
     const images = await navigationBar.openImages();
     const imageDetails = await images.openImageDetails(imageToPull);
@@ -76,6 +77,7 @@ describe('Verification of container creation workflow', async () => {
   }, 30000);
 
   test('Open a container details', async () => {
+    console.log('open details containers');
     const navigationBar = new NavigationBar(page);
     const containers = await navigationBar.openContainers();
     const containersDetails = await containers.openContainersDetails(containerToRun);
@@ -96,6 +98,7 @@ describe('Verification of container creation workflow', async () => {
   });
 
   test('Stopping a container', async () => {
+    console.log('stop containers');
     const navigationBar = new NavigationBar(page);
     const containers = await navigationBar.openContainers();
     const containersDetails = await containers.openContainersDetails(containerToRun);
@@ -110,6 +113,7 @@ describe('Verification of container creation workflow', async () => {
   });
 
   test('Deleting a container', async () => {
+    console.log('delete containers');
     const navigationBar = new NavigationBar(page);
     const containers = await navigationBar.openContainers();
     const containersDetails = await containers.openContainersDetails(containerToRun);

@@ -23,14 +23,12 @@ import { PodmanDesktopRunner } from './runner/podman-desktop-runner';
 import { WelcomePage } from './model/pages/welcome-page';
 import { ImagesPage } from './model/pages/images-page';
 import { NavigationBar } from './model/workbench/navigation';
-import { removeFolderIfExists } from './utility/cleanup';
-import { join } from 'path';
 
 let pdRunner: PodmanDesktopRunner;
 let page: Page;
 
 beforeAll(async () => {
-  await removeFolderIfExists(join('tests', 'output', 'podman-desktop'));
+  console.log('BeforeAll pull image');
   pdRunner = new PodmanDesktopRunner();
   page = await pdRunner.start();
 
@@ -39,11 +37,13 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  console.log('AfterAll pull image');
   await pdRunner.close();
 });
 
 describe('Image pull verification', async () => {
   test('Pull image', async () => {
+    console.log('pull image');
     const navBar = new NavigationBar(page);
     const imagesPage = await navBar.openImages();
     const pullImagePage = await imagesPage.openPullImage();
@@ -53,6 +53,7 @@ describe('Image pull verification', async () => {
   });
 
   test('Check image details', async () => {
+    console.log('open details pull image');
     const imagesPage = new ImagesPage(page);
     const imageDetailPage = await imagesPage.openImageDetails('quay.io/podman/hello');
 

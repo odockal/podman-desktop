@@ -24,26 +24,25 @@ import { PodmanDesktopRunner } from './runner/podman-desktop-runner';
 import { WelcomePage } from './model/pages/welcome-page';
 import { DashboardPage } from './model/pages/dashboard-page';
 import { NavigationBar } from './model/workbench/navigation';
-import { removeFolderIfExists } from './utility/cleanup';
-import { join } from 'path';
 
 let pdRunner: PodmanDesktopRunner;
 let page: Page;
 
 beforeAll(async () => {
-  // remove podman desktop custom configuration
-  await removeFolderIfExists(join('tests', 'output', 'podman-desktop'));
-  pdRunner = new PodmanDesktopRunner();
+  console.log('BeforeAll welcome');
+  pdRunner = new PodmanDesktopRunner('', 'welcome-podman-desktop');
   page = await pdRunner.start();
 });
 
 afterAll(async () => {
+  console.log('AfterAll welcome');
   await pdRunner.close();
 });
 
 describe('Basic e2e verification of podman desktop start', async () => {
   describe('Welcome page handling', async () => {
     test('Check the Welcome page is displayed', async () => {
+      console.log('Displayed welcome');
       const window: JSHandle<BrowserWindow> = await pdRunner.getBrowserWindow();
 
       const windowState = await window.evaluate(
@@ -75,6 +74,7 @@ describe('Basic e2e verification of podman desktop start', async () => {
     });
 
     test('Telemetry checkbox is present, set to true, consent can be changed', async () => {
+      console.log('telemetry defaults welcome');
       // wait for the initial screen to be loaded
       const welcomePage = new WelcomePage(page);
       await playExpect(welcomePage.telemetryConsent).toBeVisible();
@@ -85,6 +85,7 @@ describe('Basic e2e verification of podman desktop start', async () => {
     });
 
     test('Redirection from Welcome page to Dashboard works', async () => {
+      console.log('redirection welcome');
       const welcomePage = new WelcomePage(page);
       // wait for visibility
       await welcomePage.goToPodmanDesktopButton.waitFor({ state: 'visible' });
@@ -104,6 +105,7 @@ describe('Basic e2e verification of podman desktop start', async () => {
 
   describe('Navigation Bar test', async () => {
     test('Verify navigation items are visible', async () => {
+      console.log('navigation bar welcome');
       const navigationBar = new NavigationBar(page);
       await playExpect(navigationBar.navigationLocator).toBeVisible();
       await playExpect(navigationBar.dashboardLink).toBeVisible();
