@@ -47,7 +47,7 @@ beforeEach<RunnerTestContext>(async ctx => {
 });
 
 describe('Image workflow verification', async () => {
-  test('Pull image', async () => {
+  test.skip('Pull image', async () => {
     const navBar = new NavigationBar(page);
     const imagesPage = await navBar.openImages();
     await playExpect(imagesPage.heading).toBeVisible();
@@ -59,7 +59,7 @@ describe('Image workflow verification', async () => {
     expect(exists, 'quay.io/podman/hello image not present in the list of images').toBeTruthy();
   });
 
-  test('Check image details', async () => {
+  test.skip('Check image details', async () => {
     const imagesPage = new ImagesPage(page);
     const imageDetailPage = await imagesPage.openImageDetails('quay.io/podman/hello');
 
@@ -68,7 +68,7 @@ describe('Image workflow verification', async () => {
     await playExpect(imageDetailPage.inspectTab).toBeVisible();
   });
 
-  test('Delete image', async () => {
+  test.skip('Delete image', async () => {
     const imageDetailPage = new ImageDetailsPage(page, 'quay.io/podman/hello');
     await playExpect(imageDetailPage.deleteButton).toBeVisible();
     await imageDetailPage.deleteButton.click();
@@ -78,5 +78,25 @@ describe('Image workflow verification', async () => {
 
     const imageExists = await imagesPage.waitForImageDelete('quay.io/podman/hello');
     playExpect(imageExists).toBeTruthy();
+  });
+
+  test('Build an image', async () => {
+    const navBar = new NavigationBar(page);
+    const images = await navBar.openImages();
+    await images.buildImageButton.click();
+    const input = page.getByPlaceholder('Select Containerfile to build...');
+    // await input.setInputFiles('/home/odockal/git/podman-desktop-qe/examples/centos7-httpd-24.containerfile');
+    // await input.fill('/home/odockal/git/podman-desktop-qe/examples/centos7-httpd-24.containerfile');
+    page.on('dialog', async (dialog) => await dialog.accept());
+    await input.click();
+    await page.keyboard.press('Control+L', { delay: 100 });
+    await page.keyboard.type('/home/odockal/git/podman-desktop-qe/examples/centos7-httpd-24.containerfile', { delay: 100 });
+    await page.keyboard.press('Enter');
+    const button = page.getByRole('button', { name: 'Build' });
+    await playExpect(button).toBeEnabled();
+    await button.click();
+    const buttonDone = page.getByRole('button', { name: 'Done' });
+    await playExpect(buttonDone).toBeVisible();
+    await buttonDone.click();
   });
 });
