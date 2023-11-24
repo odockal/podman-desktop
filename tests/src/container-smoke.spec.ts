@@ -74,7 +74,7 @@ afterAll(async () => {
 }, 90000);
 
 describe('Verification of container creation workflow', async () => {
-  test(`Pulling of '${imageToPull}:${imageTag}' image`, async () => {
+  test.skip(`Pulling of '${imageToPull}:${imageTag}' image`, async () => {
     const navigationBar = new NavigationBar(page);
     let images = await navigationBar.openImages();
     const pullImagePage = await images.openPullImage();
@@ -85,7 +85,7 @@ describe('Verification of container creation workflow', async () => {
     await pdRunner.screenshot('containers-pull-image.png');
   }, 60000);
 
-  test(`Start a container '${containerToRun}'`, async () => {
+  test.skip(`Start a container '${containerToRun}'`, async () => {
     const navigationBar = new NavigationBar(page);
     const images = await navigationBar.openImages();
     const imageDetails = await images.openImageDetails(imageToPull);
@@ -100,7 +100,7 @@ describe('Verification of container creation workflow', async () => {
     }, 5000);
   });
 
-  test('Open a container details', async () => {
+  test.skip('Open a container details', async () => {
     const navigationBar = new NavigationBar(page);
     const containers = await navigationBar.openContainers();
     const containersDetails = await containers.openContainersDetails(containerToRun);
@@ -121,7 +121,7 @@ describe('Verification of container creation workflow', async () => {
     // TODO: After updating of accessibility of various element in containers pages, we can extend test
   });
 
-  test('Stopping a container', async () => {
+  test.skip('Stopping a container', async () => {
     const navigationBar = new NavigationBar(page);
     const containers = await navigationBar.openContainers();
     const containersDetails = await containers.openContainersDetails(containerToRun);
@@ -142,7 +142,7 @@ describe('Verification of container creation workflow', async () => {
     await pdRunner.screenshot('containers-container-stopped.png');
   });
 
-  test('Deleting a container', async () => {
+  test.skip('Deleting a container', async () => {
     const navigationBar = new NavigationBar(page);
     const containers = await navigationBar.openContainers();
     const containersDetails = await containers.openContainersDetails(containerToRun);

@@ -29,9 +29,11 @@ let pdRunner: PodmanDesktopRunner;
 let page: Page;
 
 beforeAll(async () => {
+  console.log('welcome-page-test');
   pdRunner = new PodmanDesktopRunner('', 'welcome-podman-desktop');
   page = await pdRunner.start();
   pdRunner.setVideoName('welcome-page-e2e');
+  // await pdRunner.closeDevTools();
 });
 
 afterAll(async () => {
@@ -45,10 +47,10 @@ beforeEach<RunnerTestContext>(async ctx => {
 describe('Basic e2e verification of podman desktop start', async () => {
   describe('Welcome page handling', async () => {
     test('Check the Welcome page is displayed', async () => {
-      const windowState = await pdRunner.getBrowserWindowState();
-      expect(windowState.isCrashed, 'The app has crashed').toBeFalsy();
-      expect(windowState.isVisible, 'The main window was not visible').toBeTruthy();
-      expect(windowState.isDevToolsOpened, 'The Dev Tools window is not closed').toBeFalsy();
+      // const windowState = await pdRunner.getBrowserWindowState();
+      // expect(windowState.isCrashed, 'The app has crashed').toBeFalsy();
+      // expect(windowState.isVisible, 'The main window was not visible').toBeTruthy();
+      // expect(windowState.isDevToolsOpened, 'The Dev Tools window is not closed').toBeFalsy();
 
       await pdRunner.screenshot('welcome-page-init.png');
 

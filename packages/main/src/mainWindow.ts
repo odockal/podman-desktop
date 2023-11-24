@@ -95,7 +95,10 @@ async function createWindow(): Promise<BrowserWindow> {
     }
 
     if (import.meta.env.DEV) {
-      browserWindow?.webContents.openDevTools();
+      // eslint-disable-next-line
+      if (!process.env.CLOSE_DEVTOOLS || process.env.CLOSE_DEVTOOLS !== 'true') {
+        browserWindow?.webContents.openDevTools();
+      }
     }
   });
 

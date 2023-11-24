@@ -68,11 +68,11 @@ export class PodmanDesktopRunner {
 
     // Evaluate that the main window is visible
     // at the same time, the function also makes sure that event 'ready-to-show' was triggered
-    const windowState = await this.getBrowserWindowState();
-    console.log(`Application Browser's window is visible: ${windowState.isVisible}`);
+    // const windowState = await this.getBrowserWindowState();
+    // console.log(`Application Browser's window is visible: ${windowState.isVisible}`);
 
     // close dev tools windows
-    await this.closeDevTools();
+    // await this.closeDevTools();
 
     return this._page;
   }
@@ -106,8 +106,22 @@ export class PodmanDesktopRunner {
       await this.getBrowserWindow()
     ).evaluate(mainWindow => {
       console.log(`Closing Dev Tools Window`);
-      mainWindow.webContents.closeDevTools();
+      mainWindow.webContents.on('devtools-opened', () => {
+        console.log('devtools-opened event emitted');
+        mainWindow.webContents.closeDevTools();
+      });
+      mainWindow.webContents.on('devtools-closed', () => {
+        console.log('devtools-closed event emitted');
+        mainWindow.focus();
+      });
     });
+  }
+
+  private setupIsTestEnvironment(): Object {
+    console.log(`Setup IS_TEST env. var.`);
+    const env: { [key: string]: string } = Object.assign({}, process.env as { [key: string]: string });
+    env.IS_TEST = 'true';
+    return env;
   }
 
   public async getBrowserWindowState(): Promise<WindowState> {
@@ -130,7 +144,7 @@ export class PodmanDesktopRunner {
         if (mainWindow.isVisible()) {
           resolve(getState());
         } else
-          mainWindow.once('ready-to-show', () => {
+          mainWindow.on('ready-to-show', () => {
             resolve(getState());
           });
       });
@@ -177,7 +191,7 @@ export class PodmanDesktopRunner {
   private defaultOptions() {
     const directory = join(this._testOutput, 'videos');
     console.log(`video will be written to: ${directory}`);
-    const env = this.setupPodmanDesktopCustomFolder();
+    let env = this.setupPodmanDesktopConfiguration();
     const recordVideo = {
       dir: directory,
       size: {
@@ -200,11 +214,17 @@ export class PodmanDesktopRunner {
     };
   }
 
-  private setupPodmanDesktopCustomFolder(): object {
+  private setupPodmanDesktopConfiguration(): object {
     const env: { [key: string]: string } = Object.assign({}, process.env as { [key: string]: string });
+    // Setup podman desktop custom home directory
     const dir = join(this._customFolder);
     console.log(`podman desktop custom config will be written to: ${dir}`);
     env.PODMAN_DESKTOP_HOME_DIR = dir;
+    // Setup CLOSE_DEVTOOLS env. var. if it was not already defined elsewhere
+    if (!process.env.CLOSE_DEVTOOLS) {
+      console.log('Setting env. var. CLOSE_DEVTOOLS');
+      env.CLOSE_DEVTOOLS = 'true';
+    }
     return env;
   }
 

@@ -45,10 +45,16 @@ let settingsBar: SettingsBar;
 let navigationBar: NavigationBar;
 
 beforeAll(async () => {
+  console.log('extensions-test');
   pdRunner = new PodmanDesktopRunner();
   page = await pdRunner.start();
   pdRunner.setVideoName('settings-extensions-e2e');
 
+  // // await pdRunner.closeDevTools();
+  // const windowState = await pdRunner.getBrowserWindowState();
+  // expect(windowState.isCrashed, 'The app has crashed').toBeFalsy();
+  // expect(windowState.isVisible, 'The main window was not visible').toBeTruthy();
+  // expect(windowState.isDevToolsOpened, 'The Dev Tools window is not closed').toBeTruthy();
   const welcomePage = new WelcomePage(page);
   await welcomePage.handleWelcomePage(true);
   navigationBar = new NavigationBar(page);
