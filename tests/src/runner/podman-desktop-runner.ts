@@ -117,13 +117,6 @@ export class PodmanDesktopRunner {
     });
   }
 
-  private setupIsTestEnvironment(): Object {
-    console.log(`Setup IS_TEST env. var.`);
-    const env: { [key: string]: string } = Object.assign({}, process.env as { [key: string]: string });
-    env.IS_TEST = 'true';
-    return env;
-  }
-
   public async getBrowserWindowState(): Promise<WindowState> {
     return await (
       await this.getBrowserWindow()
@@ -221,9 +214,9 @@ export class PodmanDesktopRunner {
     console.log(`podman desktop custom config will be written to: ${dir}`);
     env.PODMAN_DESKTOP_HOME_DIR = dir;
     // Setup CLOSE_DEVTOOLS env. var. if it was not already defined elsewhere
-    if (!process.env.CLOSE_DEVTOOLS) {
+    if (!process.env.OPEN_DEVTOOLS) {
       console.log('Setting env. var. CLOSE_DEVTOOLS');
-      env.CLOSE_DEVTOOLS = 'true';
+      env.OPEN_DEVTOOLS = 'false';
     }
     return env;
   }
