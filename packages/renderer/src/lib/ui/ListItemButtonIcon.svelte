@@ -18,6 +18,10 @@ export let menu = false;
 export let detailed = false;
 export let inProgress = false;
 export let iconOffset = '';
+
+// Pop up with a dialog before executing the action
+export let confirm = false;
+
 let positionLeftClass = 'left-1';
 if (detailed) positionLeftClass = 'left-2';
 let positionTopClass = 'top-1';
@@ -55,7 +59,26 @@ const buttonClass =
 const buttonDisabledClass =
   'm-0.5 text-gray-900 font-medium rounded-full inline-flex items-center px-2 py-2 text-center';
 
-$: handleClick = enabled && !inProgress ? onClick : () => {};
+// $: handleClick = enabled && !inProgress ? onClick : () => {};
+$: handleClick = () => {
+  if (enabled && !inProgress) {
+    if (confirm) {
+      window
+        .showMessageBox({
+          title: 'Confirmation',
+          message: 'Are you sure you want to ' + title.toLowerCase() + '?',
+          buttons: ['Yes', 'Cancel'],
+        })
+        .then(result => {
+          if (result && result.response === 0) {
+            onClick();
+          }
+        });
+    } else {
+      onClick();
+    }
+  }
+};
 $: styleClass = detailed
   ? enabled && !inProgress
     ? buttonDetailedClass

@@ -156,6 +156,7 @@ if (dropdownMenu) {
 <ListItemButtonIcon
   title="Delete Pod"
   onClick="{() => deletePod()}"
+  confirm="{true}"
   icon="{faTrash}"
   detailed="{detailed}"
   inProgress="{pod.actionInProgress && pod.status === 'DELETING'}" />

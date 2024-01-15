@@ -18,7 +18,7 @@
 
 import '@testing-library/jest-dom/vitest';
 import { test, expect, vi, beforeEach, afterEach } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import PodActions from './PodActions.svelte';
 import type { PodInfoUI } from './PodInfoUI';
 import type { ContainerInfo, Port } from '@podman-desktop/api';
@@ -33,8 +33,10 @@ const pod: PodInfoUI = {
 const listContainersMock = vi.fn();
 const getContributedMenusMock = vi.fn();
 const updateMock = vi.fn();
+const showMessageBoxMock = vi.fn();
 
 beforeEach(() => {
+  (window as any).showMessageBox = showMessageBoxMock;
   (window as any).kubernetesDeletePod = vi.fn();
   (window as any).listContainers = listContainersMock;
   (window as any).startPod = vi.fn();
@@ -101,6 +103,8 @@ test('Expect no error and status restarting pod', async () => {
 });
 
 test('Expect no error and status deleting pod', async () => {
+  // Mock the showMessageBox to return 0 (yes)
+  showMessageBoxMock.mockResolvedValue({ response: 0 });
   listContainersMock.mockResolvedValue([]);
 
   const { component } = render(PodActions, { pod });
@@ -109,6 +113,9 @@ test('Expect no error and status deleting pod', async () => {
   // click on delete button
   const deleteButton = screen.getByRole('button', { name: 'Delete Pod' });
   await fireEvent.click(deleteButton);
+
+  // Wait for confirmation modal to disappear after clicking on delete
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 
   expect(pod.status).toEqual('DELETING');
   expect(pod.actionError).toEqual('');
