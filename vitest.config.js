@@ -28,8 +28,8 @@ const config = {
   test: {
     globals: true,
     environment: 'jsdom',
-    globalSetup: './tests/src/globalSetup/global-setup.ts',
-    setupFiles: './tests/src/setupFiles/extended-hooks.ts',
+    globalSetup: './node_modules/podman-desktop-test-framework/src/globalSetup/global-setup.ts',
+    setupFiles: './node_modules/podman-desktop-test-framework/src/setupFiles/extended-hooks.ts',
     /**
      * By default, vitest search test files in all packages.
      * For e2e tests have sense search only is project root tests folder
