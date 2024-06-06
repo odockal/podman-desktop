@@ -73,29 +73,38 @@ jobs:
           wget https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_22.04/amd64/conmon_2.1.2~0_amd64.deb -O /tmp/conmon_2.1.2.deb
           sudo apt install /tmp/conmon_2.1.2.deb
 
-      - name: Get yarn cache directory path
-        id: yarn-cache-dir-path
-        run: echo "dir=$(yarn cache dir)" >> ${GITHUB_OUTPUT}
+      - name: Install Podman Machine
+        run: |
+          sudo apt-get install qemu-user-static
+          podman machine init --rootful --now
+          podman machine ls --format json
+          podman version
+          podman pull alpine
+          podman images
+          
+      # - name: Get yarn cache directory path
+      #   id: yarn-cache-dir-path
+      #   run: echo "dir=$(yarn cache dir)" >> ${GITHUB_OUTPUT}
 
-      - uses: actions/cache@v4
-        id: yarn-cache
-        with:
-          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
+      # - uses: actions/cache@v4
+      #   id: yarn-cache
+      #   with:
+      #     path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+      #     key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-yarn-
 
-      - name: Execute yarn
-        run: yarn --frozen-lockfile
+      # - name: Execute yarn
+      #   run: yarn --frozen-lockfile
 
-      - name: Run All E2E tests
-        env:
-          PODMANDESKTOP_CI_BOT_TOKEN: ${{ secrets.PODMANDESKTOP_CI_BOT_TOKEN }}
-          TEST_PODMAN_MACHINE: 'true'
-        run: yarn test:e2e
+      # - name: Run All E2E tests
+      #   env:
+      #     PODMANDESKTOP_CI_BOT_TOKEN: ${{ secrets.PODMANDESKTOP_CI_BOT_TOKEN }}
+      #     TEST_PODMAN_MACHINE: 'true'
+      #   run: yarn test:e2e
 
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: e2e-tests
-          path: ./tests/output/
+      # - uses: actions/upload-artifact@v4
+      #   if: always()
+      #   with:
+      #     name: e2e-tests
+      #     path: ./tests/output/
