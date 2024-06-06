@@ -76,7 +76,7 @@ jobs:
       - name: Install Podman Machine
         run: |
           sudo apt-get install qemu-user-static
-          sudo apt-get install qemu-system-x86_64 || true
+          sudo apt-get install qemu-system
           whereis qemu-system-x86_64
           podman machine init --rootful --now
           podman machine ls --format json
