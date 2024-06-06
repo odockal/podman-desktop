@@ -281,7 +281,6 @@ jobs:
   e2e-tests:
     name: e2e tests
     runs-on: ubuntu-22.04
-    needs: smoke-e2e-tests
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -320,7 +319,11 @@ jobs:
         run: yarn --frozen-lockfile
 
       - name: Run All E2E tests
-        run: yarn test:e2e
+        run: |
+          podman machine init --rootful --now
+          podman machine ls --format json
+          podman version
+          yarn test:e2e
 
       - uses: actions/upload-artifact@v4
         if: always()
