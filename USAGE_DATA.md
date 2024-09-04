@@ -1,4 +1,4 @@
-# Data Collection
+# Data Collection TEST
 
 Podman Desktop uses telemetry to collect anonymous usage data in order to identify issues and improve our user experience. You can read our privacy statement
 [here](https://developers.redhat.com/article/tool-data-collection).
