@@ -66,16 +66,16 @@ jobs:
 
       - name: Check which paths were changed
         run: |
-          if grep -q 'pnpm-lock.yaml' changed_files.txt; then
-            echo "The pnpm-lock.yaml file was changed."
+          if grep -q 'pnpm.lock' changed_files.txt; then
+            echo "The pnpm.lock file was changed."
           else
             echo "Other files were changed."
           fi
           
-      - name: Set output if pnpm-lock.yaml changed
+      - name: Set output if pnpm.lock changed
         id: set_output
         run: |
-          if grep -q 'pnpm-lock.yaml' changed_files.txt; then
+          if grep -q 'pnpm.lock' changed_files.txt; then
             echo "::set-output name=pnpm_lock_changed::true"
           else
             echo "::set-output name=pnpm_lock_changed::false"
