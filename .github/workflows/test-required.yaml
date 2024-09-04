@@ -47,7 +47,55 @@ jobs:
         run: |
           echo "Ordinary workflow"
           echo "Show changed files: ${{ github.event.pull_request.changed_files }}"
+#
+# Copyright (C) 2023-2024 Red Hat, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# SPDX-License-Identifier: Apache-2.0
 
+name: Test Evaluate required
+
+on:
+  pull_request:
+    paths: 
+      - '**'
+      - 'pnpm.lock'
+    types: [labeled, synchronize, opened, reopened]
+
+  workflow_dispatch:
+    inputs:
+      skip:
+        default: false
+        description: 'Skip first job'
+        type: boolean
+        required: true
+      fail:
+        default: false
+        description: 'Fail first job'
+        type: boolean
+        required: true
+
+jobs:
+
+  zero_job:
+    name: Job Zero
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Run the something
+        run: |
+          echo "Ordinary workflow"
+          echo "Show changed files: ${{ github.event.pull_request.changed_files }}"
   detect_changed_paths:
     name: Detect Changed Paths
     runs-on: ubuntu-latest
@@ -65,7 +113,6 @@ jobs:
           git fetch origin ${{ github.event.pull_request.base.ref }}
           git diff --name-only origin/${{ github.event.pull_request.base.ref }} HEAD > changed_files.txt
           cat changed_files.txt
-
       - name: Check which paths were changed
         run: |
           if grep -q 'pnpm.lock' changed_files.txt; then
@@ -82,7 +129,6 @@ jobs:
           else
             echo "PNPM_LOCK_CHANGED=false" >> $GITHUB_OUTPUT
           fi
-
   first_job:
     name: Run tests
     runs-on: ubuntu-22.04
@@ -97,9 +143,60 @@ jobs:
       - name: Run the test yeah
         run: |
             [ "${{ env.FAIL }}" = "false" ] && echo "TESTS PASSED" || (echo "Tests FAILED" && exit 1)
-
   second_job:
     name: Evaluate first job
+    runs-on: ubuntu-22.04
+    needs: first_job
+    if: |
+      always()
+    steps:
+      - name: Echo the results
+        run: | 
+          echo "Job result: ${{ needs.first_job.result }}"
+          if [ "${{ needs.first_job.result }}" = "failure" ]; then
+            echo "Marking failed..."
+            exit 1
+          fi
+
+  detect_changed_paths:
+    name: Detect pnpm lock file changed
+    runs-on: ubuntu-latest
+    outputs:
+      pnpm_lock_changed: ${{ steps.pnpm_changed.outputs.PNPM_LOCK_CHANGED }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+
+      - name: Evaluate changes in files
+        id: pnpm_changed
+        run: |
+          git fetch origin ${{ github.event.pull_request.base.ref }}
+          git diff --name-only origin/${{ github.event.pull_request.base.ref }} HEAD > changes.txt
+          if grep -q 'pnpm.lock' changes.txt; then
+            echo "PNPM_LOCK_CHANGED=true" >> $GITHUB_OUTPUT
+          else
+            echo "PNPM_LOCK_CHANGED=false" >> $GITHUB_OUTPUT
+          fi
+
+  first_job:
+    name: Run tests win
+    runs-on: ubuntu-22.04
+    needs: detect_changed_paths
+    if: contains(github.event.pull_request.labels.*.name, 'update') || needs.detect_changed_paths.outputs.pnpm_lock_changed == 'true'
+    env: 
+      DEFAULT_FAIL: false
+    steps:
+      - name: Set default envs.
+        run: |
+          echo "FAIL=${{ github.event.inputs.fail || env.DEFAULT_FAIL }}" >> $GITHUB_ENV
+      - name: Run the test yeah
+        run: |
+            [ "${{ env.FAIL }}" = "false" ] && echo "TESTS PASSED" || (echo "Tests FAILED" && exit 1)
+
+  second_job:
+    name: Running Update E2E ${{ needs.first_job.result == 'skipped' && '(skipped)' || '(executed)' }}
     runs-on: ubuntu-22.04
     needs: first_job
     if: |
