@@ -44,7 +44,9 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Run the something
-        run: echo "Ordinary workflow"
+        run: |
+          echo "Ordinary workflow"
+          echo "Show changed files: ${{ github.event.pull_request.changed_files }}"
 
   first_job:
     name: Run tests
