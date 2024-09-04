@@ -76,16 +76,16 @@ jobs:
         id: set_output
         run: |
           if grep -q 'pnpm.lock' changed_files.txt; then
-            echo "::set-output name=pnpm_lock_changed::true"
+            echo "PNPM_LOCK_CHANGED=true" >> $GITHUB_OUTPUT
           else
-            echo "::set-output name=pnpm_lock_changed::false"
+            echo "PNPM_LOCK_CHANGED=false" >> $GITHUB_OUTPUT
           fi
 
   first_job:
     name: Run tests
     runs-on: ubuntu-22.04
     needs: detect_changed_paths
-    if: contains(github.event.pull_request.labels.*.name, 'update') || needs.detect_changed_paths.outputs.pnpm_lock_changed == 'true'
+    if: contains(github.event.pull_request.labels.*.name, 'update') || needs.detect_changed_paths.outputs.PNPM_LOCK_CHANGED == 'true'
     env: 
       DEFAULT_FAIL: false
     steps:
