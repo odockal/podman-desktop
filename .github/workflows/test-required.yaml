@@ -49,7 +49,7 @@ jobs:
   first_job:
     name: Run tests
     runs-on: ubuntu-22.04
-    if: ${{ inputs.skip == false }} || contains(github.event.pull_request.changed_files, 'pnpm.lock') || contains(github.event.pull_request.labels.*.name, 'update')
+    if: contains(github.event.pull_request.changed_files, 'pnpm.lock') || contains(github.event.pull_request.labels.*.name, 'update')
     env: 
       DEFAULT_FAIL: false
     steps:
@@ -70,7 +70,7 @@ jobs:
       - name: Echo the results
         run: | 
           echo "Job result: ${{ needs.first_job.result }}"
-          if [ ${{ needs.first_job.result == 'failure' }} ]; then
+          if [ "${{ needs.first_job.result }}" = "failure" ]; then
             echo "Marking failed..."
             exit 1
           fi
