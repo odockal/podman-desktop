@@ -42,7 +42,7 @@ jobs:
     steps:
       - name: Run the test yeah
         run: |
-            [ "${{ inputs.fail }}" = "true" ] && echo "TESTS PASSED" || echo "Tests FAILED" && exit 1
+            [ "${{ inputs.fail }}" = "false" ] && echo "TESTS PASSED" || echo "Tests FAILED" && exit 1
 
   second_job:
     name: Evaluate first job
