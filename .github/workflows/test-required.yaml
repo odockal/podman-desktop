@@ -18,8 +18,11 @@
 name: Test Evaluate required
 
 on:
-  push:
-    branches: [main]
+  pull_request:
+    paths: 
+      - '**'
+      - 'pnpm.lock'
+    types: [labeled, synchronize, opened, reopened]
 
   workflow_dispatch:
     inputs:
@@ -35,14 +38,22 @@ on:
         required: true
 
 jobs:
+
+  zero_job:
+    name: Job Zero
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Run the something
+        run: echo "Ordinary workflow"
+
   first_job:
     name: Run tests
     runs-on: ubuntu-22.04
-    if: ${{ inputs.skip == false }}
+    if: ${{ inputs.skip == false }} || contains(github.event.pull_request.changed_files, 'pnpm.lock') || contains(github.event.pull_request.labels.*.name, 'update')
     steps:
       - name: Run the test yeah
         run: |
-            [ "${{ inputs.fail }}" = "false" ] && echo "TESTS PASSED" || (echo "Tests FAILED" && exit 1)
+            [ "${{ inputs.fail }}" = "true" ] && echo "TESTS PASSED" || echo "Tests FAILED" && exit 1
 
   second_job:
     name: Evaluate first job
@@ -54,7 +65,7 @@ jobs:
       - name: Echo the results
         run: | 
           echo "Job result: ${{ needs.first_job.result }}"
-          if [ "${{ needs.first_job.result }}" = "failure" ]; then
+          if [ ${{ needs.first_job.result == 'failure' }} ]; then
             echo "Marking failed..."
             exit 1
           fi
