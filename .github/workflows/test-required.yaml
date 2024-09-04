@@ -54,7 +54,7 @@ jobs:
       - name: Echo the results
         run: | 
           echo "Job result: ${{ needs.first_job.result }}"
-          if [ ${{ needs.first_job.result == 'failure' }} ]; then
+          if [ "${{ needs.first_job.result }}" = "failure" }} ]; then
             echo "Marking failed..."
             exit 1
           fi
