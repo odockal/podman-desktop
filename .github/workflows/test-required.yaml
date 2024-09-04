@@ -47,67 +47,6 @@ jobs:
         run: |
           echo "Ordinary workflow"
           echo "Show changed files: ${{ github.event.pull_request.changed_files }}"
-  detect_changed_paths:
-    name: Detect Changed Paths
-    runs-on: ubuntu-latest
-    outputs:
-      pnpm_lock_changed: ${{ steps.set_output.outputs.PNPM_LOCK_CHANGED }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 2 # Fetch enough history to compare changes
-
-      - name: Get the list of changed files
-        id: changed_files
-        run: |
-          git fetch origin ${{ github.event.pull_request.base.ref }}
-          git diff --name-only origin/${{ github.event.pull_request.base.ref }} HEAD > changed_files.txt
-          cat changed_files.txt
-      - name: Check which paths were changed
-        run: |
-          if grep -q 'pnpm.lock' changed_files.txt; then
-            echo "The pnpm.lock file was changed."
-          else
-            echo "Other files were changed."
-          fi
-          
-      - name: Set output if pnpm.lock changed
-        id: set_output
-        run: |
-          if grep -q 'pnpm.lock' changed_files.txt; then
-            echo "PNPM_LOCK_CHANGED=true" >> $GITHUB_OUTPUT
-          else
-            echo "PNPM_LOCK_CHANGED=false" >> $GITHUB_OUTPUT
-          fi
-  first_job:
-    name: Run tests
-    runs-on: ubuntu-22.04
-    needs: detect_changed_paths
-    if: contains(github.event.pull_request.labels.*.name, 'update') || needs.detect_changed_paths.outputs.pnpm_lock_changed == 'true'
-    env: 
-      DEFAULT_FAIL: false
-    steps:
-      - name: Set default envs.
-        run: |
-          echo "FAIL=${{ github.event.inputs.fail || env.DEFAULT_FAIL }}" >> $GITHUB_ENV
-      - name: Run the test yeah
-        run: |
-            [ "${{ env.FAIL }}" = "false" ] && echo "TESTS PASSED" || (echo "Tests FAILED" && exit 1)
-  second_job:
-    name: Evaluate first job
-    runs-on: ubuntu-22.04
-    needs: first_job
-    if: |
-      always()
-    steps:
-      - name: Echo the results
-        run: | 
-          echo "Job result: ${{ needs.first_job.result }}"
-          if [ "${{ needs.first_job.result }}" = "failure" ]; then
-            echo "Marking failed..."
-            exit 1
-          fi
 
   detect_changed_paths:
     name: Detect pnpm lock file changed
