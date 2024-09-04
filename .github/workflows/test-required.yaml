@@ -49,7 +49,7 @@ jobs:
   first_job:
     name: Run tests
     runs-on: ubuntu-22.04
-    if: ${{ inputs.skip == false }} || contains(github.event.pull_request.changed_files, 'pnpm.lock') || contains(github.event.pull_request.labels.*.name, 'update')
+    if: contains(github.event.pull_request.changed_files, 'pnpm.lock') || contains(github.event.pull_request.labels.*.name, 'update')
     steps:
       - name: Run the test yeah
         run: |
