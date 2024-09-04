@@ -51,6 +51,8 @@ jobs:
   detect_changed_paths:
     name: Detect Changed Paths
     runs-on: ubuntu-latest
+    outputs:
+      pnpm_lock_changed: ${{ steps.set_output.outputs.PNPM_LOCK_CHANGED }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -85,7 +87,7 @@ jobs:
     name: Run tests
     runs-on: ubuntu-22.04
     needs: detect_changed_paths
-    if: contains(github.event.pull_request.labels.*.name, 'update') || needs.detect_changed_paths.outputs.PNPM_LOCK_CHANGED == 'true'
+    if: contains(github.event.pull_request.labels.*.name, 'update') || needs.detect_changed_paths.outputs.pnpm_lock_changed == 'true'
     env: 
       DEFAULT_FAIL: false
     steps:
