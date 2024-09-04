@@ -55,7 +55,7 @@ jobs:
     steps:
       - name: Set default envs.
         run: |
-          echo "FAIL=${{ github.event.inputs.fail || env.DEFAULT_FAIL }}" >> GITHUB_ENV
+          echo "FAIL=${{ github.event.inputs.fail || env.DEFAULT_FAIL }}" >> $GITHUB_ENV
       - name: Run the test yeah
         run: |
             [ "${{ env.FAIL }}" = "true" ] && echo "TESTS PASSED" || echo "Tests FAILED" && exit 1
