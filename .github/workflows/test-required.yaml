@@ -50,10 +50,15 @@ jobs:
     name: Run tests
     runs-on: ubuntu-22.04
     if: contains(github.event.pull_request.changed_files, 'pnpm.lock') || contains(github.event.pull_request.labels.*.name, 'update')
+    env: 
+      DEFAULT_FAIL: false
     steps:
+      - name: Set default envs.
+        run: |
+          echo "FAIL=${{ github.event.inputs.fail || env.DEFAULT_FAIL }}" >> $GITHUB_ENV
       - name: Run the test yeah
         run: |
-          [ "${{ env.FAIL }}" = "false" ] && echo "TESTS PASSED" || (echo "Tests FAILED" && exit 1)
+            [ "${{ env.FAIL }}" = "false" ] && echo "TESTS PASSED" || (echo "Tests FAILED" && exit 1)
 
   second_job:
     name: Evaluate first job
