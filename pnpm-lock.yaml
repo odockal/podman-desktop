@@ -9,7 +9,7 @@ importers:
   .:
     dependencies:
       '@docker/extension-api-client-types':
-        specifier: 0.3.4
+        specifier: 0.3.5
         version: 0.3.4
       '@kubernetes/client-node':
         specifier: ^1.0.0-rc6
