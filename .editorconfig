@@ -5,7 +5,7 @@
 # top-most EditorConfig file
 root = true
 
-# defaults
+# defaults TESt
 [*]
 charset = utf-8
 end_of_line = lf
