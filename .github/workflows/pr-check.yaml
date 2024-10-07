@@ -446,7 +446,7 @@ jobs:
           dmgPath=$(realpath $(find ./dist -name "*.dmg"))
           echo "DMG Path: $dmgPath"
           # codesign the binary
-          pdPath=$(realpath "./dist/mac-*/*.app/Contents/MacOS/*Desktop")
+          pdPath=$(realpath ./dist/mac-*/*.app/Contents/MacOS/*Desktop)
           echo "PD Path: $pdPath"
           #codesign --force -deep --sign . "./dist/mac-arm64/Podman Desktop.app/Contents/MacOS/Podman Desktop"
           #hdituil attach $dmgPath
