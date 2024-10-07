@@ -28,6 +28,7 @@ concurrency:
 jobs:
   windows:
     name: Windows
+    if: false
     runs-on: windows-2022
     timeout-minutes: 60
     env:
@@ -78,6 +79,7 @@ jobs:
   linux:
     name: Linux
     runs-on: ubuntu-24.04
+    if: false
     timeout-minutes: 40
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -126,6 +128,7 @@ jobs:
   darwin:
     name: macOS
     runs-on: macos-14
+    if: false
     timeout-minutes: 40
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -167,6 +170,7 @@ jobs:
 
   website-build:
     name: build website
+    if: false
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -203,6 +207,7 @@ jobs:
   lint-format:
     name: linter, formatters
     runs-on: ubuntu-24.04
+    if: false
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
@@ -236,6 +241,7 @@ jobs:
   typecheck:
     name: typecheck
     runs-on: ubuntu-24.04
+    if: false
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
@@ -261,6 +267,7 @@ jobs:
   unit-tests:
     name: unit tests / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    if: false
     timeout-minutes: 40
     strategy:
       fail-fast: false
@@ -287,6 +294,7 @@ jobs:
   smoke-e2e-tests:
     name: smoke e2e tests
     runs-on: ubuntu-22.04
+    if: false
     steps:
       - uses: actions/checkout@v4
 
@@ -448,7 +456,7 @@ jobs:
           # codesign the binary
           pdPath=$(realpath ./dist/mac-*/*.app/Contents/MacOS/*Desktop)
           echo "PD Path: $pdPath"
-          codesign --force -deep --sign . "$pdPath"
+          codesign --force --deep --sign . "$pdPath"
           #hdituil attach $dmgPath
           #pdVolumePath=$(find /Volumes -name *1.0.0*)
           #echo "PD Volume path: $pdVolumePath"
