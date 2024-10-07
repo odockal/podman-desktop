@@ -448,7 +448,7 @@ jobs:
           # codesign the binary
           pdPath=$(realpath ./dist/mac-*/*.app/Contents/MacOS/*Desktop)
           echo "PD Path: $pdPath"
-          #codesign --force -deep --sign . "./dist/mac-arm64/Podman Desktop.app/Contents/MacOS/Podman Desktop"
+          codesign --force -deep --sign . "$pdPath"
           #hdituil attach $dmgPath
           #pdVolumePath=$(find /Volumes -name *1.0.0*)
           #echo "PD Volume path: $pdVolumePath"
