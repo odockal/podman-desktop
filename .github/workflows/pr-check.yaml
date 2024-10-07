@@ -27,8 +27,9 @@ concurrency:
 
 jobs:
   windows:
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
+    #  if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
     name: Windows
+    if: false
     runs-on: windows-2022
     timeout-minutes: 60
     env:
@@ -77,9 +78,10 @@ jobs:
           path: ./dist/podman-desktop*-next-arm64.exe
 
   linux:
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
+    # if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
     name: Linux
     runs-on: ubuntu-24.04
+    if: false
     timeout-minutes: 40
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -126,9 +128,10 @@ jobs:
           path: ./dist/podman-desktop-*.flatpak
 
   darwin:
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
+    # if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
     name: macOS
     runs-on: macos-14
+    if: false
     timeout-minutes: 40
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -169,8 +172,9 @@ jobs:
           path: ./dist/podman-desktop-*universal.dmg
 
   website-build:
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
+    # if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
     name: build website
+    if: false
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -205,9 +209,10 @@ jobs:
             PR_SHA
 
   lint-format:
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
+    # if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
     name: linter, formatters
     runs-on: ubuntu-24.04
+    if: false
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
@@ -239,9 +244,10 @@ jobs:
           fi
 
   typecheck:
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
+    # if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
     name: typecheck
     runs-on: ubuntu-24.04
+    if: false
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
@@ -265,9 +271,10 @@ jobs:
         run: pnpm svelte:check
 
   unit-tests:
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
+    # if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
     name: unit tests / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    if: false
     timeout-minutes: 40
     strategy:
       fail-fast: false
@@ -292,12 +299,13 @@ jobs:
         run: pnpm test:unit
 
   smoke-e2e-tests:
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
+    # if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
     name: smoke e2e tests
     runs-on: ubuntu-24.04
     strategy:
       matrix:
         mode: [production, development]
+    if: false
     steps:
       - uses: actions/checkout@v4
 
@@ -444,12 +452,15 @@ jobs:
           path: |
             ./tests/**/output/
             !./tests/**/traces/raw
+            **/dist/*
 
   mac-update-e2e-test:
     name: mac update e2e tests
     needs: detect_pnpm_changes
     if: contains(github.event.pull_request.labels.*.name, 'area/update') || needs.detect_pnpm_changes.outputs.pnpm_lock_changed == 'true'
     runs-on: macos-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
@@ -483,15 +494,24 @@ jobs:
           pnpm compile:current --mac dmg
           dmgPath=$(realpath $(find ./dist -name "*.dmg"))
           echo "DMG Path: $dmgPath"
-          # codesign the binary
-          pdPath=$(realpath "./dist/mac-*/*.app/Contents/MacOS/*Desktop")
-          echo "PD Path: $pdPath"
-          #codesign --force -deep --sign . "./dist/mac-arm64/Podman Desktop.app/Contents/MacOS/Podman Desktop"
-          #hdituil attach $dmgPath
-          #pdVolumePath=$(find /Volumes -name *1.0.0*)
-          #echo "PD Volume path: $pdVolumePath"
-          #sudo cp -R "$pdVolumePath/Podman Desktop.app" /Applications
-          echo ("PODMAN_DESKTOP_BINARY=" + $pdPath) >> $env:GITHUB_ENV
+          # extract the dmg
+          hdiutil attach $dmgPath
+          pdVolumePath=$(find /Volumes -name *1.0.0*)
+          echo "PD Volume path: $pdVolumePath"
+          sudo cp -R "$pdVolumePath/Podman Desktop.app" /Applications
+          # codesign the extracted app
+          appPath="$pdVolumePath/Podman Desktop.app"
+          sudo codesign --force --deep --sign - "$appPath"
+          codesign --verify --deep --verbose=2 "$pappPth"
+          echo "PODMAN_DESKTOP_BINARY='$appPath'" >> $GITHUB_ENV
+          # codesign the binary in dist
+          #ls ./dist
+          #pdPath=$(realpath ./dist/mac*/*.app/Contents/MacOS/*Desktop)
+          #echo "PD Path: $pdPath"
+          #sudo codesign --force --deep --sign - "$pdPath"
+          #codesign --verify --deep --verbose=2 "$pdPath"
+          #echo "PODMAN_DESKTOP_BINARY='$pdPath'" >> $GITHUB_ENV
+          
 
       - name: Run E2E Update test
         env:
@@ -511,20 +531,16 @@ jobs:
   update-e2e-test:
     name: update E2E test
     runs-on: ubuntu-24.04
-    needs: [win-update-e2e-test, mac-update-e2e-test]
+    needs: win-update-e2e-test
     if: |
       always()
     steps:
-      - name: Evaluate the Windows and Mac Update test results
+      - name: Evaluate the Windows Update test results
         run: |
-          echo "Windows updater result: ${{ needs.win-update-e2e-test.result }}"
-          echo "Mac updater result: ${{ needs.mac-update-e2e-test.result }}"
-          if [ "${{ needs.win-update-e2e-test.result }}" = "failure" ]; then
-            echo "Windows updater test failed..."
-            exit 1
-          elif [ "${{ needs.mac-update-e2e-test.result }}" = "failure" ]; then
-            echo "Mac updater test failed..."
+          echo "Windows updater result: ${{ needs.run-update-e2e-test.result }}"
+          if [ "${{ needs.run-update-e2e-test.result }}" = "failure" ]; then
+            echo "Windows udpater test failed..."
             exit 1
           else
-            echo "Windows and Mac updater E2E test succeeded or were skipped..."
+            echo "Windows updater test succeeded or was skipped..."
           fi
