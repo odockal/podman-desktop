@@ -453,7 +453,7 @@ jobs:
           #pdVolumePath=$(find /Volumes -name *1.0.0*)
           #echo "PD Volume path: $pdVolumePath"
           #sudo cp -R "$pdVolumePath/Podman Desktop.app" /Applications
-          echo "PODMAN_DESKTOP_BINARY='$pdPath'" >> GITHUB_ENV
+          echo "PODMAN_DESKTOP_BINARY='$pdPath'" >> $GITHUB_ENV
 
       - name: Run E2E Update test
         env:
