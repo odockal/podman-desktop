@@ -419,7 +419,9 @@ jobs:
     name: mac update e2e tests
     needs: detect_pnpm_changes
     if: contains(github.event.pull_request.labels.*.name, 'area/update') || needs.detect_pnpm_changes.outputs.pnpm_lock_changed == 'true'
-    runs-on: macos-latest
+    runs-on: macos-13
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
@@ -456,7 +458,7 @@ jobs:
           # codesign the binary
           pdPath=$(realpath ./dist/mac-*/*.app/Contents/MacOS/*Desktop)
           echo "PD Path: $pdPath"
-          codesign --force --deep --sign . "$pdPath"
+          #codesign --force --deep --sign . "$pdPath"
           #hdituil attach $dmgPath
           #pdVolumePath=$(find /Volumes -name *1.0.0*)
           #echo "PD Volume path: $pdVolumePath"
