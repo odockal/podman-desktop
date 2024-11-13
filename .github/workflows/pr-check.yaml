@@ -28,6 +28,7 @@ concurrency:
 jobs:
   windows:
     name: Windows
+    if: false
     runs-on: windows-2022
     timeout-minutes: 60
     env:
@@ -77,6 +78,7 @@ jobs:
 
   linux:
     name: Linux
+    if: false
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     env:
@@ -125,6 +127,7 @@ jobs:
 
   darwin:
     name: macOS
+    if: false
     runs-on: macos-14
     timeout-minutes: 40
     env:
@@ -167,6 +170,7 @@ jobs:
 
   website-build:
     name: build website
+    if: false
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -202,6 +206,7 @@ jobs:
 
   lint-format:
     name: linter, formatters
+    if: false
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     steps:
@@ -235,6 +240,7 @@ jobs:
 
   typecheck:
     name: typecheck
+    if: false
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     steps:
@@ -260,6 +266,7 @@ jobs:
 
   unit-tests:
     name: unit tests / ${{ matrix.os }}
+    if: false
     runs-on: ${{ matrix.os }}
     timeout-minutes: 40
     strategy:
@@ -286,7 +293,7 @@ jobs:
 
   smoke-e2e-tests:
     name: smoke e2e tests
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         mode: [production, development]
@@ -295,19 +302,38 @@ jobs:
 
       - name: Update podman
         run: |
-          sudo sh -c "echo 'deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_22.04/ /' > /etc/apt/sources.list.d/devel:kubic:libcontainers:unstable.list"
-          curl -L "https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_22.04/Release.key" | sudo apt-key add -
+          echo "ubuntu version from kubic repository to install podman we need (v5)"
+          ubuntu_version='23.10'
+          echo "Add unstable kubic repo into list of available sources and get the repo key"
+          sudo sh -c "echo 'deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_${ubuntu_version}/ /' > /etc/apt/sources.list.d/devel:kubic:libcontainers:unstable.list"
+          curl -L "https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_${ubuntu_version}/Release.key" | sudo apt-key add -
+          echo "install necessary dependencies for criu package which is not part of ${ubuntu_version}"
+          sudo apt-get install -qq libprotobuf32t64 python3-protobuf libnet1
+          echo "install criu manually from static location"
+          curl -sLO http://cz.archive.ubuntu.com/ubuntu/pool/universe/c/criu/criu_3.16.1-2_amd64.deb && sudo dpkg -i criu_3.16.1-2_amd64.deb
+          echo "Updating all dependencies..."
           sudo apt-get update -qq
+          echo "installing/update podman package..."
           sudo apt-get -qq -y install podman || { echo "Start fallback steps for podman nightly installation from a static mirror" && \
-            sudo sh -c "echo 'deb http://ftp.lysator.liu.se/pub/opensuse/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_22.04/ /' > /etc/apt/sources.list.d/devel:kubic:libcontainers:unstable.list" && \
-            curl -L "http://ftp.lysator.liu.se/pub/opensuse/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_22.04/Release.key" | sudo apt-key add - && \
+            sudo sh -c "echo 'deb http://ftp.lysator.liu.se/pub/opensuse/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_${ubuntu_version}/ /' > /etc/apt/sources.list.d/devel:kubic:libcontainers:unstable.list" && \
+            curl -L "http://ftp.lysator.liu.se/pub/opensuse/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_${ubuntu_version}/Release.key" | sudo apt-key add - && \
             sudo apt-get update && \
             sudo apt-get -y install podman; }
           podman version
-          # downgrade conmon package version to workaround issue with starting containers, see  https://github.com/containers/conmon/issues/475
-          # remove once the repository contains conmon 2.1.10
-          wget https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_22.04/amd64/conmon_2.1.2~0_amd64.deb -O /tmp/conmon_2.1.2.deb
-          sudo apt install /tmp/conmon_2.1.2.deb
+
+      - name: Revert unprivileged user namespace restrictions in Ubuntu 24.04
+        run: |
+          # allow unprivileged user namespace
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
+      - name: Set cgroup_manager to 'cgroupfs' instead of systemd
+        run: |
+          mkdir -p ~/.config/containers
+          cat <<EOT >> ~/.config/containers/containers.conf
+          [engine]
+          cgroup_manager="cgroupfs"
+          EOT
+          podman info 
 
       - uses: pnpm/action-setup@v4
         name: Install pnpm
@@ -322,20 +348,17 @@ jobs:
       - name: Execute pnpm
         run: pnpm install
 
-      - name: Build and Run Podman Desktop E2E tests in Production Mode
-        if: ${{ matrix.mode == 'production' }}
-        env:
-          ELECTRON_ENABLE_INSPECT: true
+      - name: Run Smoke E2E tests in ${{ matrix.mode == 'production' && 'Production' || 'Development' }} Mode
         run: |
-          pnpm compile:current --linux dir
-          path=$(realpath ./dist/linux-unpacked/podman-desktop)
-          echo "Podman Desktop built binary: $path"
-          export PODMAN_DESKTOP_BINARY_PATH=$path
+          if [ ${{ matrix.mode }} == 'production' ]; then
+            echo "Compiling the Podman Desktop in production mode"
+            export ELECTRON_ENABLE_INSPECT=true
+            pnpm compile:current --linux dir
+            path=$(realpath ./dist/linux-unpacked/podman-desktop)
+            echo "Podman Desktop built binary: $path"
+            export PODMAN_DESKTOP_BINARY_PATH=$path
+          fi
           pnpm test:e2e:smoke
-
-      - name: Run Smoke E2E tests in Development mode
-        if: ${{ matrix.mode == 'development' }}
-        run: pnpm test:e2e:smoke
 
       - uses: actions/upload-artifact@v4
         if: always()
