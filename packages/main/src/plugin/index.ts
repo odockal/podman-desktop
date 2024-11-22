@@ -588,7 +588,7 @@ export class PluginSystem {
     });
 
     commandRegistry.registerCommand('help', () => {
-      return navigationManager.navigateToHelp();
+      apiSender.send('toggle-help-menu', '');
     });
 
     commandRegistry.registerCommand('troubleshooting', () => {
@@ -2851,6 +2851,10 @@ export class PluginSystem {
         return dockerCompatibility.switchDockerContext(dockerContextName);
       },
     );
+
+    this.ipcHandle('path:relative', async (_listener, from: string, to: string): Promise<string> => {
+      return path.relative(from, to);
+    });
 
     const dockerDesktopInstallation = new DockerDesktopInstallation(
       apiSender,

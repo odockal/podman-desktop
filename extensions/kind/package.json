@@ -102,7 +102,7 @@
     "@octokit/rest": "^21.0.2",
     "@podman-desktop/api": "workspace:*",
     "mustache": "^4.2.0",
-    "yaml": "^2.6.0"
+    "yaml": "^2.6.1"
   },
   "devDependencies": {
     "adm-zip": "^0.5.16",
@@ -110,6 +110,6 @@
     "tmp-promise": "^3.0.3",
     "tsx": "^4.19.2",
     "vite": "^5.4.11",
-    "vitest": "^2.1.4"
+    "vitest": "^2.1.5"
   }
 }

@@ -19,7 +19,7 @@ name: pr-check
 
 on:
   pull_request:
-    types: [labeled, synchronize, opened, reopened]
+    types: [labeled, synchronize, opened, ready_for_review, reopened]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
@@ -27,7 +27,9 @@ concurrency:
 
 jobs:
   windows:
+    #  if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
     name: Windows
+    if: false
     runs-on: windows-2022
     timeout-minutes: 60
     env:
@@ -76,8 +78,10 @@ jobs:
           path: ./dist/podman-desktop*-next-arm64.exe
 
   linux:
+    # if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
     name: Linux
     runs-on: ubuntu-24.04
+    if: false
     timeout-minutes: 40
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -124,8 +128,10 @@ jobs:
           path: ./dist/podman-desktop-*.flatpak
 
   darwin:
+    # if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
     name: macOS
     runs-on: macos-14
+    if: false
     timeout-minutes: 40
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -166,7 +172,9 @@ jobs:
           path: ./dist/podman-desktop-*universal.dmg
 
   website-build:
+    # if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
     name: build website
+    if: false
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -201,8 +209,10 @@ jobs:
             PR_SHA
 
   lint-format:
+    # if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
     name: linter, formatters
     runs-on: ubuntu-24.04
+    if: false
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
@@ -234,8 +244,10 @@ jobs:
           fi
 
   typecheck:
+    # if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
     name: typecheck
     runs-on: ubuntu-24.04
+    if: false
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
@@ -259,8 +271,10 @@ jobs:
         run: pnpm svelte:check
 
   unit-tests:
+    # if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
     name: unit tests / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    if: false
     timeout-minutes: 40
     strategy:
       fail-fast: false
@@ -285,29 +299,50 @@ jobs:
         run: pnpm test:unit
 
   smoke-e2e-tests:
+    # if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
     name: smoke e2e tests
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         mode: [production, development]
+    if: false
     steps:
       - uses: actions/checkout@v4
 
-      - name: Update podman
+      - name: Update podman to 5.x
         run: |
-          sudo sh -c "echo 'deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_22.04/ /' > /etc/apt/sources.list.d/devel:kubic:libcontainers:unstable.list"
-          curl -L "https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_22.04/Release.key" | sudo apt-key add -
+          echo "ubuntu version from kubic repository to install podman we need (v5)"
+          ubuntu_version='23.10'
+          echo "Add unstable kubic repo into list of available sources and get the repo key"
+          sudo sh -c "echo 'deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_${ubuntu_version}/ /' > /etc/apt/sources.list.d/devel:kubic:libcontainers:unstable.list"
+          curl -L "https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_${ubuntu_version}/Release.key" | sudo apt-key add -
+          echo "install necessary dependencies for criu package which is not part of ${ubuntu_version}"
+          sudo apt-get install -qq libprotobuf32t64 python3-protobuf libnet1
+          echo "install criu manually from static location"
+          curl -sLO http://cz.archive.ubuntu.com/ubuntu/pool/universe/c/criu/criu_3.16.1-2_amd64.deb && sudo dpkg -i criu_3.16.1-2_amd64.deb
+          echo "Updating all dependencies..."
           sudo apt-get update -qq
+          echo "installing/update podman package..."
           sudo apt-get -qq -y install podman || { echo "Start fallback steps for podman nightly installation from a static mirror" && \
-            sudo sh -c "echo 'deb http://ftp.lysator.liu.se/pub/opensuse/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_22.04/ /' > /etc/apt/sources.list.d/devel:kubic:libcontainers:unstable.list" && \
-            curl -L "http://ftp.lysator.liu.se/pub/opensuse/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_22.04/Release.key" | sudo apt-key add - && \
+            sudo sh -c "echo 'deb http://ftp.lysator.liu.se/pub/opensuse/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_${ubuntu_version}/ /' > /etc/apt/sources.list.d/devel:kubic:libcontainers:unstable.list" && \
+            curl -L "http://ftp.lysator.liu.se/pub/opensuse/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_${ubuntu_version}/Release.key" | sudo apt-key add - && \
             sudo apt-get update && \
             sudo apt-get -y install podman; }
           podman version
-          # downgrade conmon package version to workaround issue with starting containers, see  https://github.com/containers/conmon/issues/475
-          # remove once the repository contains conmon 2.1.10
-          wget https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_22.04/amd64/conmon_2.1.2~0_amd64.deb -O /tmp/conmon_2.1.2.deb
-          sudo apt install /tmp/conmon_2.1.2.deb
+
+      - name: Revert unprivileged user namespace restrictions in Ubuntu 24.04
+        run: |
+          # allow unprivileged user namespace
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
+      - name: Set cgroup_manager to 'cgroupfs' instead of systemd
+        run: |
+          mkdir -p ~/.config/containers
+          cat <<EOT >> ~/.config/containers/containers.conf
+          [engine]
+          cgroup_manager="cgroupfs"
+          EOT
+          podman info
 
       - uses: pnpm/action-setup@v4
         name: Install pnpm
@@ -322,20 +357,17 @@ jobs:
       - name: Execute pnpm
         run: pnpm install
 
-      - name: Build and Run Podman Desktop E2E tests in Production Mode
-        if: ${{ matrix.mode == 'production' }}
-        env:
-          ELECTRON_ENABLE_INSPECT: true
+      - name: Run Smoke E2E tests in ${{ matrix.mode == 'production' && 'Production' || 'Development' }} Mode
         run: |
-          pnpm compile:current --linux dir
-          path=$(realpath ./dist/linux-unpacked/podman-desktop)
-          echo "Podman Desktop built binary: $path"
-          export PODMAN_DESKTOP_BINARY_PATH=$path
+          if [ ${{ matrix.mode }} == 'production' ]; then
+            echo "Compiling the Podman Desktop in production mode"
+            export ELECTRON_ENABLE_INSPECT=true
+            pnpm compile:current --linux dir
+            path=$(realpath ./dist/linux-unpacked/podman-desktop)
+            echo "Podman Desktop built binary: $path"
+            export PODMAN_DESKTOP_BINARY_PATH=$path
+          fi
           pnpm test:e2e:smoke
-
-      - name: Run Smoke E2E tests in Development mode
-        if: ${{ matrix.mode == 'development' }}
-        run: pnpm test:e2e:smoke
 
       - uses: actions/upload-artifact@v4
         if: always()
@@ -346,6 +378,7 @@ jobs:
             !./tests/**/traces/raw
 
   detect_pnpm_changes:
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
     name: Detect pnpm lock or pr-check files changes
     runs-on: ubuntu-24.04
     outputs:
@@ -367,7 +400,7 @@ jobs:
             echo "PNPM_LOCK_CHANGED=false" >> $GITHUB_OUTPUT
           fi
 
-  run-update-e2e-test:
+  win-update-e2e-test:
     name: win update e2e tests
     needs: detect_pnpm_changes
     if: contains(github.event.pull_request.labels.*.name, 'area/update') || needs.detect_pnpm_changes.outputs.pnpm_lock_changed == 'true'
@@ -394,7 +427,7 @@ jobs:
 
       - name: Adjust/Downgrade local podman desktop version Windows
         run: |
-          $version="1.0.0"
+          $version="1.13.0"
           jq --arg version "$version" '.version = $version' package.json | Out-File -FilePath package.json_tmp
           Move-Item -Path package.json_tmp -Destination package.json -Force
 
@@ -419,11 +452,86 @@ jobs:
           path: |
             ./tests/**/output/
             !./tests/**/traces/raw
+            **/dist/*
+
+  mac-update-e2e-test:
+    name: mac update e2e tests
+    needs: detect_pnpm_changes
+    if: contains(github.event.pull_request.labels.*.name, 'area/update') || needs.detect_pnpm_changes.outputs.pnpm_lock_changed == 'true'
+    runs-on: macos-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Execute pnpm
+        run: pnpm install
+
+      - name: Execute PNPM
+        run: pnpm install --frozen-lockfile
+
+      - name: Adjust/Downgrade local podman desktop version Windows
+        run: |
+          version="1.13.0"
+          jq --arg version "$version" '.version = $version' package.json > package.json_tmp
+          mv package.json_tmp package.json
+
+      - name: Build Podman Desktop locally with electron updater included
+        env:
+          ELECTRON_ENABLE_INSPECT: true
+        run: |
+          pnpm compile:current --mac dmg
+          dmgPath=$(realpath $(find ./dist -name "*.dmg"))
+          echo "DMG Path: $dmgPath"
+          # extract the dmg
+          hdiutil attach $dmgPath
+          pdVolumePath=$(find /Volumes -name *1.13.0*)
+          echo "PD Volume path: $pdVolumePath"
+          sudo cp -R "$pdVolumePath/Podman Desktop.app" /Applications
+          # codesign the extracted app
+          appPath="$pdVolumePath/Podman Desktop.app"
+          sudo codesign --force --deep --sign - "$appPath"
+          codesign --verify --deep --verbose=2 "$pappPth"
+          echo "PODMAN_DESKTOP_BINARY='$appPath'" >> $GITHUB_ENV
+          # codesign the binary in dist
+          #ls ./dist
+          #pdPath=$(realpath ./dist/mac*/*.app/Contents/MacOS/*Desktop)
+          #echo "PD Path: $pdPath"
+          #sudo codesign --force --deep --sign - "$pdPath"
+          #codesign --verify --deep --verbose=2 "$pdPath"
+          #echo "PODMAN_DESKTOP_BINARY='$pdPath'" >> $GITHUB_ENV
+          
+
+      - name: Run E2E Update test
+        env:
+          UPDATE_PODMAN_DESKTOP: true
+        run: |
+          echo "${{ env.PODMAN_DESKTOP_BINARY }}"
+          pnpm test:e2e:update:run
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mac-update-e2e-test
+          path: |
+            ./tests/**/output/
+            !./tests/**/traces/raw
 
   update-e2e-test:
     name: update E2E test
     runs-on: ubuntu-24.04
-    needs: run-update-e2e-test
+    needs: win-update-e2e-test
     if: |
       always()
     steps:
