@@ -427,7 +427,7 @@ jobs:
 
       - name: Adjust/Downgrade local podman desktop version Windows
         run: |
-          $version="1.0.0"
+          $version="1.13.0"
           jq --arg version "$version" '.version = $version' package.json | Out-File -FilePath package.json_tmp
           Move-Item -Path package.json_tmp -Destination package.json -Force
 
