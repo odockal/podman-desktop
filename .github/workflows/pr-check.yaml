@@ -501,16 +501,10 @@ jobs:
           sudo cp -R "$pdVolumePath/Podman Desktop.app" /Applications
           # codesign the extracted app
           appPath="/Applications/Podman Desktop.app"
-          sudo codesign --force --deep --sign - "$appPath" || true
-          codesign --verify --deep --verbose=2 "$appPath" || true
-          echo "PODMAN_DESKTOP_BINARY='$appPath'" >> $GITHUB_ENV
-          # codesign the binary in dist
-          #ls ./dist
-          #pdPath=$(realpath ./dist/mac*/*.app/Contents/MacOS/*Desktop)
-          #echo "PD Path: $pdPath"
-          #sudo codesign --force --deep --sign - "$pdPath"
-          #codesign --verify --deep --verbose=2 "$pdPath"
-          #echo "PODMAN_DESKTOP_BINARY='$pdPath'" >> $GITHUB_ENV
+          sudo codesign --force --deep --sign - "$appPath"
+          codesign --verify --deep --verbose=2 "$appPath"
+          binaryPath="$appPath/Contents/MacOS/Podman Desktop"
+          echo "PODMAN_DESKTOP_BINARY='$binaryPath'" >> $GITHUB_ENV
 
       - name: Run E2E Update test
         env:
