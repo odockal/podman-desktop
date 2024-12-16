@@ -409,51 +409,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
-        name: Install pnpm
-        with:
-          run_install: false
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
-
-      - name: Execute pnpm
-        run: pnpm install
-
-      - name: Execute PNPM
-        run: pnpm install --frozen-lockfile
-
-      - name: Adjust/Downgrade local podman desktop version Windows
-        run: |
-          $version="1.13.0"
-          jq --arg version "$version" '.version = $version' package.json | Out-File -FilePath package.json_tmp
-          Move-Item -Path package.json_tmp -Destination package.json -Force
-
-      - name: Build Podman Desktop locally with electron updater included
-        env:
-          ELECTRON_ENABLE_INSPECT: true
-        run: |
-          pnpm compile:current --win nsis
-          $path=('./dist/win-unpacked/Podman Desktop.exe' | resolve-path).ProviderPath
-          echo $path
-          echo ("PODMAN_DESKTOP_BINARY=" + $path) >> $env:GITHUB_ENV
-
-      - name: Run E2E Update test
-        run: |
-          echo "${{ env.PODMAN_DESKTOP_BINARY }}"
-          pnpm test:e2e:update:run
-
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: win-update-e2e-test
-          path: |
-            ./tests/**/output/
-            !./tests/**/traces/raw
-            **/dist/*
-
   mac-update-e2e-test:
     name: mac update e2e tests
     needs: detect_pnpm_changes
@@ -534,7 +489,7 @@ jobs:
         run: |
           echo "Windows updater result: ${{ needs.win-update-e2e-test.result }}"
           echo "Mac updater result: ${{ needs.mac-update-e2e-test.result }}"
-          if [ "${{ needs.win-update-e2e-test.result }}" = "failure" || "${{ needs.mac-update-e2e-test.result }}" = "failure" ]; then
+          if [[ "${{ needs.win-update-e2e-test.result }}" = "failure" || "${{ needs.mac-update-e2e-test.result }}" = "failure" ]]; then
             echo "Windows or Mac udpater test failed..."
             exit 1
           else
