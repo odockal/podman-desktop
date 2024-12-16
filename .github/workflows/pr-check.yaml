@@ -502,7 +502,7 @@ jobs:
           # codesign the extracted app
           appPath="/Applications/Podman Desktop.app"
           sudo codesign --force --deep --sign - "$appPath" || true
-          codesign --verify --deep --verbose=2 "$pappPth" || true
+          codesign --verify --deep --verbose=2 "$appPath" || true
           echo "PODMAN_DESKTOP_BINARY='$appPath'" >> $GITHUB_ENV
           # codesign the binary in dist
           #ls ./dist
