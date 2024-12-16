@@ -481,7 +481,7 @@ jobs:
       - name: Execute PNPM
         run: pnpm install --frozen-lockfile
 
-      - name: Adjust/Downgrade local podman desktop version Windows
+      - name: Adjust/Downgrade local podman desktop version
         run: |
           version="1.13.0"
           jq --arg version "$version" '.version = $version' package.json > package.json_tmp
@@ -504,7 +504,7 @@ jobs:
           sudo codesign --force --deep --sign - "$appPath"
           codesign --verify --deep --verbose=2 "$appPath"
           binaryPath="$appPath/Contents/MacOS/Podman Desktop"
-          echo "PODMAN_DESKTOP_BINARY='$binaryPath'" >> $GITHUB_ENV
+          echo "PODMAN_DESKTOP_BINARY=\"$binaryPath\"" >> $GITHUB_ENV
 
       - name: Run E2E Update test
         env:
