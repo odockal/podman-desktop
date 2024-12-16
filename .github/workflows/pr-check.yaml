@@ -504,7 +504,7 @@ jobs:
           sudo codesign --force --deep --sign - "$appPath"
           codesign --verify --deep --verbose=2 "$appPath"
           binaryPath="$appPath/Contents/MacOS/Podman Desktop"
-          echo "PODMAN_DESKTOP_BINARY=\"$binaryPath\"" >> $GITHUB_ENV
+          echo "PODMAN_DESKTOP_BINARY=$binaryPath" >> $GITHUB_ENV
 
       - name: Run E2E Update test
         env:
