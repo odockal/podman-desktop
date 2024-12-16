@@ -463,6 +463,8 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 60
     steps:
+      - name: Fail
+        run: unknown command
       - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v4
@@ -513,10 +515,6 @@ jobs:
           echo "${{ env.PODMAN_DESKTOP_BINARY }}"
           pnpm test:e2e:update:run
 
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        if: ${{ failure() }}
-
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -528,16 +526,17 @@ jobs:
   update-e2e-test:
     name: update E2E test
     runs-on: ubuntu-24.04
-    needs: win-update-e2e-test
+    needs: [win-update-e2e-test, mac-update-e2e-test]
     if: |
       always()
     steps:
-      - name: Evaluate the Windows Update test results
+      - name: Evaluate the Windows and Mac E2E Update test results
         run: |
-          echo "Windows updater result: ${{ needs.run-update-e2e-test.result }}"
-          if [ "${{ needs.run-update-e2e-test.result }}" = "failure" ]; then
-            echo "Windows udpater test failed..."
+          echo "Windows updater result: ${{ needs.win-update-e2e-test.result }}"
+          echo "Mac updater result: ${{ needs.mac-update-e2e-test.result }}"
+          if [ "${{ needs.win-update-e2e-test.result }}" = "failure" || "${{ needs.mac-update-e2e-test.result }}" = "failure" ]; then
+            echo "Windows or Mac udpater test failed..."
             exit 1
           else
-            echo "Windows updater test succeeded or was skipped..."
+            echo "Windows and Mac updater test succeeded or was skipped..."
           fi
