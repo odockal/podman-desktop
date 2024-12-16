@@ -511,6 +511,10 @@ jobs:
           #sudo codesign --force --deep --sign - "$pdPath"
           #codesign --verify --deep --verbose=2 "$pdPath"
           #echo "PODMAN_DESKTOP_BINARY='$pdPath'" >> $GITHUB_ENV
+  
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ failure() }}
           
 
       - name: Run E2E Update test
