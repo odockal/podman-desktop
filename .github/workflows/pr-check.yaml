@@ -419,7 +419,8 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+      - name: Fail
+        run: unknown command
 
   update-e2e-test:
     name: update E2E test
