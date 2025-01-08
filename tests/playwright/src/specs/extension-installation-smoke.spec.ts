@@ -27,6 +27,7 @@ import { SettingsBar } from '../model/pages/settings-bar';
 import { WelcomePage } from '../model/pages/welcome-page';
 import { NavigationBar } from '../model/workbench/navigation';
 import { Runner } from '../runner/podman-desktop-runner';
+import { installExtensionFromOCIImage } from '../utility/extension-operation';
 
 const DISABLED = 'DISABLED';
 const ACTIVE = 'ACTIVE';
@@ -110,16 +111,7 @@ for (const { extensionName, extensionType } of extentionTypes) {
       test.skip(extensionType !== OPENSHIFT_CHECKER);
       test.setTimeout(200_000);
 
-      const extensionsPage = new ExtensionsPage(page);
-
-      await extensionsPage.installExtensionFromOCIImage(ociImageUrl);
-      await extensionsPage.openCatalogTab();
-      const extensionCatalog = new ExtensionCatalogCardPage(page, extensionType);
-      await playExpect(extensionCatalog.parent).toBeVisible();
-      await playExpect.poll(async () => await extensionCatalog.isInstalled()).toBeTruthy();
-
-      await extensionsPage.openInstalledTab();
-      await playExpect.poll(async () => await extensionsPage.extensionIsInstalled(extensionLabel)).toBeTruthy();
+      await installExtensionFromOCIImage(page, ociImageUrl, extensionType, extensionLabel);
     });
 
     test.describe
