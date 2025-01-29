@@ -18,11 +18,15 @@
 
 import type { Locator } from '@playwright/test';
 
+import { extensionsExternalList } from '/@/model/core/extensions';
+
+import { ExtensionCatalogCardPage, ExtensionsPage } from '../..';
 import type { StatusBar } from '../../model/workbench/status-bar';
 import { expect as playExpect, test } from '../../utility/fixtures';
 import { handleConfirmationDialog } from '../../utility/operations';
 import { isLinux } from '../../utility/platform';
 
+const installExtensions = process.env.INSTALLATION_TYPE !== 'fresh' ? true : false;
 let sBar: StatusBar;
 let updateAvailableDialog: Locator;
 let updateDialog: Locator;
@@ -57,6 +61,33 @@ test.describe.serial('Podman Desktop Update installation', { tag: '@update-insta
     // handle welcome page now
     await welcomePage.handleWelcomePage(true);
   });
+
+  test.describe
+    .serial('External Extensions installation', () => {
+      test.skip(!installExtensions, 'Skipping extension installation, testing fresh installation update');
+
+      extensionsExternalList.forEach(extension => {
+        test(`Installation of ${extension.extensionFullName}`, async ({ navigationBar, page }) => {
+          test.setTimeout(120_000);
+          await navigationBar.openExtensions();
+          const extensionsPage = new ExtensionsPage(page);
+          await extensionsPage.openCatalogTab();
+          const extensionCatalogCard = new ExtensionCatalogCardPage(page, extension.extensionName);
+          await playExpect(extensionCatalogCard.parent).toBeVisible();
+          await extensionCatalogCard.install(90_000);
+
+          await extensionsPage.openInstalledTab();
+          await playExpect
+            .poll(async () => await extensionsPage.extensionIsInstalled(extension.extensionLabel))
+            .toBeTruthy();
+          const extensionCard = await extensionsPage.getInstalledExtension(
+            extension.extensionName,
+            extension.extensionLabel,
+          );
+          await playExpect(extensionCard.status).toHaveText('ACTIVE');
+        });
+      });
+    });
 
   test('Version button is visible', async () => {
     await playExpect(sBar.content).toBeVisible();
