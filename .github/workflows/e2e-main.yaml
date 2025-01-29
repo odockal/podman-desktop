@@ -156,11 +156,15 @@ jobs:
             !./tests/**/traces/raw
 
   win-update-e2e-test:
-    name: win update e2e tests
+    name: win update e2e tests - ${{ matrix.installation }}
     runs-on: windows-2022
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        installation: ['fresh', 'extensions']
     steps:
       - uses: actions/checkout@v4
         with:
@@ -193,6 +197,7 @@ jobs:
       - name: Build Podman Desktop locally with electron updater included
         env:
           ELECTRON_ENABLE_INSPECT: true
+          INSTALLATION_TYPE: ${{ matrix.installation }}
         run: |
           pnpm compile:current --win nsis
           $path=('./dist/win-unpacked/Podman Desktop.exe' | resolve-path).ProviderPath
@@ -200,6 +205,8 @@ jobs:
           echo ("PODMAN_DESKTOP_BINARY=" + $path) >> $env:GITHUB_ENV
 
       - name: Run E2E Update test
+        env:
+          INSTALLATION_TYPE: ${{ matrix.installation }}
         run: |
           echo "${{ env.PODMAN_DESKTOP_BINARY }}"
           pnpm test:e2e:update:run

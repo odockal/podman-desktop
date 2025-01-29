@@ -41,7 +41,7 @@ export class ExtensionsPage {
       name: 'additionalActions',
     });
     this.installedTab = this.page.getByRole('button', { name: 'Installed' });
-    this.catalogTab = this.page.getByRole('button', { name: 'Catalog' });
+    this.catalogTab = this.page.getByRole('button', { name: 'Catalog', exact: true });
     this.installExtensionFromOCIImageButton = this.additionalActions.getByLabel('Install custom');
   }
 
@@ -106,6 +106,7 @@ export class ExtensionsPage {
   public async extensionIsInstalled(label: string): Promise<boolean> {
     await this.openInstalledTab();
     const extension = this.content.getByRole('region', { name: label });
+    await extension.scrollIntoViewIfNeeded();
     return (await extension.count()) > 0;
   }
 }
