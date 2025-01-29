@@ -106,7 +106,6 @@ export class ExtensionsPage {
   public async extensionIsInstalled(label: string): Promise<boolean> {
     await this.openInstalledTab();
     const extension = this.content.getByRole('region', { name: label });
-    await extension.scrollIntoViewIfNeeded();
     return (await extension.count()) > 0;
   }
 }

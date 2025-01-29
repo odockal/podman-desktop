@@ -197,7 +197,6 @@ jobs:
       - name: Build Podman Desktop locally with electron updater included
         env:
           ELECTRON_ENABLE_INSPECT: true
-          INSTALLATION_TYPE: ${{ matrix.installation }}
         run: |
           pnpm compile:current --win nsis
           $path=('./dist/win-unpacked/Podman Desktop.exe' | resolve-path).ProviderPath
@@ -209,6 +208,7 @@ jobs:
           INSTALLATION_TYPE: ${{ matrix.installation }}
         run: |
           echo "${{ env.PODMAN_DESKTOP_BINARY }}"
+          echo "${{ env.INSTALLATION_TYPE }}"
           pnpm test:e2e:update:run
 
       - name: Publish Test Report
@@ -225,7 +225,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: update-e2e-test
+          name: update-e2e-test-${{ matrix.installation }}
           path: |
             ./tests/**/output/
             !./tests/**/traces/raw
