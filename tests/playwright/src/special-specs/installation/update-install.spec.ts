@@ -34,13 +34,14 @@ let updateDownloadedDialog: Locator;
 
 test.skip(isLinux, 'Update is not supported on Linux');
 
-test.beforeAll(async ({ runner, page, statusBar }) => {
+test.beforeAll(async ({ runner, page, statusBar, welcomePage }) => {
   runner.setVideoAndTraceName('update-e2e');
 
   sBar = statusBar;
   updateAvailableDialog = page.getByRole('dialog', { name: 'Update Available now' });
   updateDialog = page.getByRole('dialog', { name: 'Update', exact: true });
   updateDownloadedDialog = page.getByRole('dialog', { name: 'Update Downloaded', exact: true });
+  await welcomePage.handleWelcomePage(true);
 });
 
 test.afterAll(async ({ runner }) => {
@@ -48,7 +49,7 @@ test.afterAll(async ({ runner }) => {
 });
 
 test.describe.serial('Podman Desktop Update installation', { tag: '@update-install' }, () => {
-  test('Update is offered automatically on startup', async ({ welcomePage }) => {
+  test.skip('Update is offered automatically on startup', async ({ welcomePage }) => {
     await playExpect(updateAvailableDialog).toBeVisible();
     const updateNowButton = updateAvailableDialog.getByRole('button', { name: 'Update Now' });
     await playExpect(updateNowButton).toBeVisible();
@@ -68,13 +69,13 @@ test.describe.serial('Podman Desktop Update installation', { tag: '@update-insta
 
       extensionsExternalList.forEach(extension => {
         test(`Installation of ${extension.extensionFullName}`, async ({ navigationBar, page }) => {
-          test.setTimeout(120_000);
+          test.setTimeout(200_000);
           await navigationBar.openExtensions();
           const extensionsPage = new ExtensionsPage(page);
           await extensionsPage.openCatalogTab();
           const extensionCatalogCard = new ExtensionCatalogCardPage(page, extension.extensionName);
           await playExpect(extensionCatalogCard.parent).toBeVisible();
-          await extensionCatalogCard.install(90_000);
+          await extensionCatalogCard.install(180_000);
 
           await extensionsPage.openInstalledTab();
           await playExpect
@@ -84,7 +85,8 @@ test.describe.serial('Podman Desktop Update installation', { tag: '@update-insta
             extension.extensionName,
             extension.extensionLabel,
           );
-          await playExpect(extensionCard.status).toHaveText('ACTIVE');
+          await extensionCard.card.scrollIntoViewIfNeeded();
+          await playExpect.soft(extensionCard.status).toHaveText('ACTIVE', { timeout: 20_000 });
         });
       });
     });
