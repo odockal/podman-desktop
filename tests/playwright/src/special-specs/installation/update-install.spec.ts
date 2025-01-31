@@ -34,14 +34,13 @@ let updateDownloadedDialog: Locator;
 
 test.skip(isLinux, 'Update is not supported on Linux');
 
-test.beforeAll(async ({ runner, page, statusBar, welcomePage }) => {
+test.beforeAll(async ({ runner, page, statusBar }) => {
   runner.setVideoAndTraceName('update-e2e');
 
   sBar = statusBar;
   updateAvailableDialog = page.getByRole('dialog', { name: 'Update Available now' });
   updateDialog = page.getByRole('dialog', { name: 'Update', exact: true });
   updateDownloadedDialog = page.getByRole('dialog', { name: 'Update Downloaded', exact: true });
-  await welcomePage.handleWelcomePage(true);
 });
 
 test.afterAll(async ({ runner }) => {
@@ -49,7 +48,7 @@ test.afterAll(async ({ runner }) => {
 });
 
 test.describe.serial('Podman Desktop Update installation', { tag: '@update-install' }, () => {
-  test.skip('Update is offered automatically on startup', async ({ welcomePage }) => {
+  test('Update is offered automatically on startup', async ({ welcomePage }) => {
     await playExpect(updateAvailableDialog).toBeVisible();
     const updateNowButton = updateAvailableDialog.getByRole('button', { name: 'Update Now' });
     await playExpect(updateNowButton).toBeVisible();
@@ -70,23 +69,34 @@ test.describe.serial('Podman Desktop Update installation', { tag: '@update-insta
       extensionsExternalList.forEach(extension => {
         test(`Installation of ${extension.extensionFullName}`, async ({ navigationBar, page }) => {
           test.setTimeout(200_000);
-          await navigationBar.openExtensions();
-          const extensionsPage = new ExtensionsPage(page);
-          await extensionsPage.openCatalogTab();
-          const extensionCatalogCard = new ExtensionCatalogCardPage(page, extension.extensionName);
-          await playExpect(extensionCatalogCard.parent).toBeVisible();
-          await extensionCatalogCard.install(180_000);
+          return test.step('Install the extension', async () => {
+            await navigationBar.openExtensions();
+            const extensionsPage = new ExtensionsPage(page);
+            await extensionsPage.openCatalogTab();
+            const extensionCatalogCard = new ExtensionCatalogCardPage(page, extension.extensionName);
+            await playExpect(extensionCatalogCard.parent).toBeVisible();
+            await extensionCatalogCard.install(180_000);
 
-          await extensionsPage.openInstalledTab();
-          await playExpect
-            .poll(async () => await extensionsPage.extensionIsInstalled(extension.extensionLabel))
-            .toBeTruthy();
-          const extensionCard = await extensionsPage.getInstalledExtension(
-            extension.extensionName,
-            extension.extensionLabel,
-          );
-          await extensionCard.card.scrollIntoViewIfNeeded();
-          await playExpect.soft(extensionCard.status).toHaveText('ACTIVE', { timeout: 20_000 });
+            await extensionsPage.openInstalledTab();
+            await playExpect
+              .poll(async () => await extensionsPage.extensionIsInstalled(extension.extensionLabel))
+              .toBeTruthy();
+            const extensionPage = await extensionsPage.openExtensionDetails(
+              extension.extensionLabel,
+              extension.extensionFullLabel,
+              extension.extensionFullName,
+            );
+            await playExpect(extensionPage.heading).toBeVisible();
+            await playExpect.soft(extensionPage.status).toHaveText('ACTIVE');
+            // tabs are empty in case there is no error. If there is error, there are two tabs' buttons present
+            const errorTab = extensionPage.tabs.getByRole('button', { name: 'Error' });
+            // we would like to propagate the error's stack trace into test failure message
+            let stackTrace = '';
+            if ((await errorTab.count()) > 0) {
+              stackTrace = await errorTab.innerText();
+            }
+            await playExpect.soft(errorTab, `Error Tab was present with stackTrace: ${stackTrace}`).not.toBeVisible();
+          });
         });
       });
     });
