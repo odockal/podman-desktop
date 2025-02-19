@@ -19,18 +19,22 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 
 import type {
+  AutostartContext,
   CheckResult,
   ContainerProviderConnection,
   InstallCheck,
   KubernetesProviderConnection,
+  Logger,
+  Provider,
   ProviderCleanup,
   ProviderConnectionShellAccess,
   ProviderConnectionShellAccessSession,
+  ProviderConnectionStatus,
   ProviderInstallation,
   ProviderLifecycle,
   ProviderUpdate,
 } from '@podman-desktop/api';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { assert, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type {
   CheckStatus,
@@ -58,6 +62,7 @@ let containerRegistry: ContainerProviderRegistry;
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.restoreAllMocks();
   telemetryTrackMock.mockImplementation(() => Promise.resolve());
   const telemetry: Telemetry = {
     track: telemetryTrackMock,
@@ -77,12 +82,11 @@ beforeEach(() => {
 });
 
 test('should initialize provider if there is kubernetes connection provider', async () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let providerInternalId: any;
+  let providerInternalId: string | undefined;
 
   apiSenderSendMock.mockImplementation((message, data) => {
     expect(message).toBe('provider-create');
-    providerInternalId = data;
+    providerInternalId = String(data);
   });
 
   const provider = providerRegistry.createProvider('id', 'name', {
@@ -100,25 +104,28 @@ test('should initialize provider if there is kubernetes connection provider', as
 
   expect(providerInternalId).toBeDefined();
 
-  await providerRegistry.initializeProvider(providerInternalId);
+  if (providerInternalId) {
+    await providerRegistry.initializeProvider(providerInternalId);
 
-  expect(telemetryTrackMock).toHaveBeenNthCalledWith(1, 'createProvider', {
-    name: 'internal',
-    status: 'installed',
-  });
+    expect(telemetryTrackMock).toHaveBeenNthCalledWith(1, 'createProvider', {
+      name: 'internal',
+      status: 'installed',
+    });
 
-  expect(initalizeCalled).toBe(true);
-  expect(apiSenderSendMock).toBeCalled();
+    expect(initalizeCalled).toBe(true);
+    expect(apiSenderSendMock).toBeCalled();
+  } else {
+    assert.fail('providerInternalId not initialized');
+  }
 });
 
 test('should send version event if update', async () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let providerInternalId: any;
+  let providerInternalId: string | undefined;
 
   apiSenderSendMock.mockImplementation((message, data) => {
     expect(['provider-create', 'provider:update-version', 'provider-change']).toContain(message);
     if (message === 'provider-create') {
-      providerInternalId = data;
+      providerInternalId = String(data);
     }
   });
 
@@ -138,24 +145,27 @@ test('should send version event if update', async () => {
   });
 
   expect(providerInternalId).toBeDefined();
-  await providerRegistry.updateProvider(providerInternalId);
+  if (providerInternalId) {
+    await providerRegistry.updateProvider(providerInternalId);
 
-  expect(telemetryTrackMock).toHaveBeenNthCalledWith(1, 'createProvider', {
-    name: 'internal',
-    status: 'installed',
-  });
+    expect(telemetryTrackMock).toHaveBeenNthCalledWith(1, 'createProvider', {
+      name: 'internal',
+      status: 'installed',
+    });
 
-  expect(updateCalled).toBe(true);
-  expect(apiSenderSendMock).toBeCalledTimes(3);
+    expect(updateCalled).toBe(true);
+    expect(apiSenderSendMock).toBeCalledTimes(3);
+  } else {
+    assert.fail('providerInternalId not initialized');
+  }
 });
 
 test('should initialize provider if there is container connection provider', async () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let providerInternalId: any;
+  let providerInternalId: string | undefined;
 
   apiSenderSendMock.mockImplementation((message, data) => {
     expect(message).toBe('provider-create');
-    providerInternalId = data;
+    providerInternalId = String(data);
   });
 
   const provider = providerRegistry.createProvider('id', 'name', {
@@ -173,15 +183,19 @@ test('should initialize provider if there is container connection provider', asy
   });
 
   expect(providerInternalId).toBeDefined();
-  await providerRegistry.initializeProvider(providerInternalId);
+  if (providerInternalId) {
+    await providerRegistry.initializeProvider(providerInternalId);
 
-  expect(telemetryTrackMock).toHaveBeenNthCalledWith(1, 'createProvider', {
-    name: 'internal',
-    status: 'installed',
-  });
+    expect(telemetryTrackMock).toHaveBeenNthCalledWith(1, 'createProvider', {
+      name: 'internal',
+      status: 'installed',
+    });
 
-  expect(initalizeCalled).toBe(true);
-  expect(apiSenderSendMock).toBeCalled();
+    expect(initalizeCalled).toBe(true);
+    expect(apiSenderSendMock).toBeCalled();
+  } else {
+    assert.fail('providerInternalId not initialized');
+  }
 });
 
 test('connections should contain the display name provided when registering', async () => {
@@ -211,8 +225,7 @@ test('connections should contain the display name provided when registering', as
 });
 
 test('should reset state if initialization fails', async () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let providerInternalId: any;
+  let providerInternalId: string | undefined;
 
   apiSenderSendMock.mockImplementation((message, data) => {
     expect(message).toBe('provider-create');
@@ -235,10 +248,14 @@ test('should reset state if initialization fails', async () => {
   });
 
   expect(providerInternalId).toBeDefined();
-  await expect(providerRegistry.initializeProvider(providerInternalId)).rejects.toThrowError(error);
+  if (providerInternalId) {
+    await expect(providerRegistry.initializeProvider(providerInternalId)).rejects.toThrowError(error);
 
-  expect(updateStatusMock).toHaveBeenCalledWith('configuring');
-  expect(updateStatusMock).toHaveBeenCalledWith('installed');
+    expect(updateStatusMock).toHaveBeenCalledWith('configuring');
+    expect(updateStatusMock).toHaveBeenCalledWith('installed');
+  } else {
+    assert.fail('providerInternalId not initialized');
+  }
 });
 
 test('expect isContainerConnection returns true with a ContainerConnection', async () => {
@@ -444,6 +461,203 @@ describe('should send events when starting a container connection', async () => 
   });
 });
 
+describe('when auto-starting a container connection', async () => {
+  let connection: ProviderContainerConnectionInfo;
+  let provider: Provider;
+  const containerProviderConnection: ContainerProviderConnection = {
+    name: 'connection',
+    displayName: 'connection',
+    type: 'docker',
+    lifecycle: {
+      start: vi.fn(),
+      stop: vi.fn(),
+    },
+    endpoint: {
+      socketPath: '/endpoint1.sock',
+    },
+    status(): ProviderConnectionStatus {
+      return 'started';
+    },
+    vmType: 'libkrun',
+  };
+
+  beforeEach(() => {
+    provider = providerRegistry.createProvider('id', 'name', {
+      id: 'internal',
+      name: 'internal',
+      status: 'installed',
+    });
+    connection = {
+      name: 'connection',
+      displayName: 'connection',
+      type: 'docker',
+      endpoint: {
+        socketPath: '/endpoint1.sock',
+      },
+      status: 'started',
+      vmType: {
+        id: 'libkrun',
+        name: 'libkrun',
+      },
+    };
+
+    providerRegistry.registerAutostartEngine(autostartEngine);
+  });
+
+  describe('when provider calls updateContainerConnection with non-registered connection', () => {
+    beforeEach(() => {
+      provider.registerAutostart({
+        start: async (_logger: Logger, context?: AutostartContext) => {
+          context?.updateContainerConnection(containerProviderConnection);
+        },
+      });
+    });
+
+    test('an error should be thrown', async () => {
+      await expect(() => providerRegistry.runAutostart('0')).rejects.toThrowError(
+        'container connection connection is not registered by provider internal',
+      );
+    });
+  });
+
+  describe('when provider calls updateContainerConnection with registered connection', () => {
+    beforeEach(() => {
+      provider.registerContainerProviderConnection(containerProviderConnection);
+
+      provider.registerAutostart({
+        start: async (_logger: Logger, context?: AutostartContext) => {
+          context?.updateContainerConnection(containerProviderConnection);
+        },
+      });
+    });
+
+    test('should send events when api is directly attached', async () => {
+      vi.mocked(containerRegistry.isApiAttached).mockReturnValue(true);
+
+      const onBeforeDidUpdateContainerConnectionListenerMock = vi.fn();
+      providerRegistry.onBeforeDidUpdateContainerConnection(onBeforeDidUpdateContainerConnectionListenerMock);
+
+      const onDidUpdateContainerConnectionListenerMock = vi.fn();
+      providerRegistry.onDidUpdateContainerConnection(onDidUpdateContainerConnectionListenerMock);
+
+      const onAfterDidUpdateContainerConnectionListenerMock = vi.fn();
+      providerRegistry.onAfterDidUpdateContainerConnection(onAfterDidUpdateContainerConnectionListenerMock);
+
+      await providerRegistry.runAutostart('0');
+
+      expect(onBeforeDidUpdateContainerConnectionListenerMock).toHaveBeenCalledTimes(2);
+      expect(onBeforeDidUpdateContainerConnectionListenerMock).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({
+          connection: expect.objectContaining({
+            name: connection.name,
+            type: connection.type,
+          }),
+          status: 'starting',
+        }),
+      );
+      expect(onBeforeDidUpdateContainerConnectionListenerMock).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          connection: expect.objectContaining({
+            name: connection.name,
+            type: connection.type,
+          }),
+          status: 'started',
+        }),
+      );
+
+      expect(onDidUpdateContainerConnectionListenerMock).toHaveBeenCalledTimes(2);
+      expect(onDidUpdateContainerConnectionListenerMock).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({
+          connection: expect.objectContaining({
+            name: connection.name,
+            type: connection.type,
+          }),
+          status: 'starting',
+        }),
+      );
+      expect(onDidUpdateContainerConnectionListenerMock).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          connection: expect.objectContaining({
+            name: connection.name,
+            type: connection.type,
+          }),
+          status: 'started',
+        }),
+      );
+
+      expect(onAfterDidUpdateContainerConnectionListenerMock).toHaveBeenCalledTimes(2);
+      expect(onAfterDidUpdateContainerConnectionListenerMock).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({
+          connection: expect.objectContaining({
+            name: connection.name,
+            type: connection.type,
+          }),
+          status: 'starting',
+        }),
+      );
+      expect(onAfterDidUpdateContainerConnectionListenerMock).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          connection: expect.objectContaining({
+            name: connection.name,
+            type: connection.type,
+          }),
+          status: 'started',
+        }),
+      );
+    });
+
+    test('should send events when api is eventually attached', async () => {
+      vi.mocked(containerRegistry.isApiAttached).mockReturnValue(false);
+      vi.mocked(containerRegistry.onApiAttached).mockImplementation(c => {
+        setTimeout(() => {
+          c('internal.connection');
+        }, 10);
+        return Disposable.noop();
+      });
+
+      let onBeforeDidUpdateContainerConnectionCalled = 0;
+      providerRegistry.onBeforeDidUpdateContainerConnection(event => {
+        expect(event.connection.name).toBe(connection.name);
+        expect(event.connection.type).toBe(connection.type);
+        expect(event.status).toBe(onBeforeDidUpdateContainerConnectionCalled ? 'started' : 'starting');
+        onBeforeDidUpdateContainerConnectionCalled++;
+      });
+      let onDidUpdateContainerConnectionCalled = 0;
+      providerRegistry.onDidUpdateContainerConnection(event => {
+        expect(event.connection.name).toBe(connection.name);
+        expect(event.connection.type).toBe(connection.type);
+        expect(event.status).toBe(onDidUpdateContainerConnectionCalled ? 'started' : 'starting');
+        onDidUpdateContainerConnectionCalled++;
+      });
+      let onAfterDidUpdateContainerConnectionCalled = 0;
+      providerRegistry.onAfterDidUpdateContainerConnection(event => {
+        expect(event.connection.name).toBe(connection.name);
+        expect(event.connection.type).toBe(connection.type);
+        expect(event.status).toBe(onAfterDidUpdateContainerConnectionCalled ? 'started' : 'starting');
+        onAfterDidUpdateContainerConnectionCalled++;
+      });
+
+      await providerRegistry.runAutostart('0');
+
+      expect(onBeforeDidUpdateContainerConnectionCalled).toBe(1);
+      expect(onDidUpdateContainerConnectionCalled).toBe(1);
+      expect(onAfterDidUpdateContainerConnectionCalled).toBe(1);
+
+      await vi.waitFor(() => {
+        expect(onBeforeDidUpdateContainerConnectionCalled).toBe(2);
+        expect(onDidUpdateContainerConnectionCalled).toBe(2);
+        expect(onAfterDidUpdateContainerConnectionCalled).toBe(2);
+      });
+    });
+  });
+});
+
 test('should send events when stopping a container connection', async () => {
   const provider = providerRegistry.createProvider('id', 'name', {
     id: 'internal',
@@ -600,8 +814,7 @@ test('should retrieve context of container provider', async () => {
 });
 
 test('should retrieve context of kubernetes provider', async () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let providerInternalId: any;
+  let providerInternalId: string | undefined;
 
   apiSenderSendMock.mockImplementation((_message, data) => {
     providerInternalId = data;
@@ -621,37 +834,41 @@ test('should retrieve context of kubernetes provider', async () => {
   });
 
   expect(providerInternalId).toBeDefined();
-  await providerRegistry.initializeProvider(providerInternalId);
+  if (providerInternalId) {
+    await providerRegistry.initializeProvider(providerInternalId!);
 
-  const connection: ProviderKubernetesConnectionInfo = {
-    name: 'connection',
-    endpoint: {
-      apiURL: 'url',
-    },
-    status: 'stopped',
-  };
+    const connection: ProviderKubernetesConnectionInfo = {
+      name: 'connection',
+      endpoint: {
+        apiURL: 'url',
+      },
+      status: 'stopped',
+    };
 
-  const startMock = vi.fn();
-  const stopMock = vi.fn();
-  provider.registerKubernetesProviderConnection({
-    name: 'connection',
-    lifecycle: {
-      start: startMock,
-      stop: stopMock,
-    },
-    endpoint: {
-      apiURL: 'url',
-    },
-    status() {
-      return 'stopped';
-    },
-  });
+    const startMock = vi.fn();
+    const stopMock = vi.fn();
+    provider.registerKubernetesProviderConnection({
+      name: 'connection',
+      lifecycle: {
+        start: startMock,
+        stop: stopMock,
+      },
+      endpoint: {
+        apiURL: 'url',
+      },
+      status() {
+        return 'stopped';
+      },
+    });
 
-  const context = providerRegistry.getMatchingConnectionLifecycleContext('0', connection);
-  expect(context instanceof LifecycleContextImpl).toBeTruthy();
+    const context = providerRegistry.getMatchingConnectionLifecycleContext('0', connection);
+    expect(context instanceof LifecycleContextImpl).toBeTruthy();
 
-  expect(initalizeCalled).toBe(true);
-  expect(apiSenderSendMock).toBeCalled();
+    expect(initalizeCalled).toBe(true);
+    expect(apiSenderSendMock).toBeCalled();
+  } else {
+    assert.fail('providerInternalId not initialized');
+  }
 });
 
 test('should retrieve provider internal id from id', async () => {

@@ -1456,7 +1456,10 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
     extensionContext.subscriptions.push(command);
   }
 
-  const doAutoStart = async (logger: extensionApi.Logger): Promise<void> => {
+  const doAutoStart = async (
+    logger: extensionApi.Logger,
+    autostartContext: extensionApi.AutostartContext,
+  ): Promise<void> => {
     autostartInProgress = true;
     // If autostart has been enabled for the machine, try to start it.
     try {
@@ -1490,6 +1493,7 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
             containerProviderConnection,
           );
           await startMachine(provider, podmanConfiguration, machineInfo, context, logger, undefined, true);
+          autostartContext.updateContainerConnection(containerProviderConnection);
           autoMachineStarted = true;
           autoMachineName = machineName;
         }
@@ -1498,10 +1502,10 @@ export async function activate(extensionContext: extensionApi.ExtensionContext):
   };
 
   provider.registerAutostart({
-    start: async (logger: extensionApi.Logger) => {
+    start: async (logger: extensionApi.Logger, autostartContext: extensionApi.AutostartContext) => {
       try {
         autostartInProgress = true;
-        await doAutoStart(logger);
+        await doAutoStart(logger, autostartContext);
       } finally {
         autostartInProgress = false;
       }
@@ -1882,6 +1886,12 @@ export async function deactivate(): Promise<void> {
       console.log('stopped autostarted machine', autoMachineName);
     }
   });
+
+  // cleanup
+  listeners.clear();
+  podmanMachinesInfo.clear();
+  currentConnections.clear();
+  containerProviderConnections.clear();
 }
 
 const PODMAN_MINIMUM_VERSION_FOR_NOW_FLAG_INIT = '4.0.0';
@@ -1917,9 +1927,13 @@ export function isUserModeNetworkingSupported(podmanVersion: string): boolean {
 
 const PODMAN_MINIMUM_VERSION_FOR_LIBKRUN_SUPPORT = '5.2.0-rc1';
 
-// Checks if libkrun is supported. Only Mac platform allows this parameter to be tuned
+// Checks if libkrun is supported. Only Mac/silicon platform allows this parameter to be tuned
 export function isLibkrunSupported(podmanVersion: string): boolean {
-  return extensionApi.env.isMac && compareVersions(podmanVersion, PODMAN_MINIMUM_VERSION_FOR_LIBKRUN_SUPPORT) >= 0;
+  return (
+    extensionApi.env.isMac &&
+    os.arch() === 'arm64' &&
+    compareVersions(podmanVersion, PODMAN_MINIMUM_VERSION_FOR_LIBKRUN_SUPPORT) >= 0
+  );
 }
 
 // Set wslEnabled. Used for testing purposes

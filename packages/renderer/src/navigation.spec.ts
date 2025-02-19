@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -128,15 +128,15 @@ test(`Test navigationHandle for ${NavigationPage.ONBOARDING}`, () => {
   expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/preferences/onboarding/my.extension');
 });
 
-test(`Test navigationHandle for ${NavigationPage.PODS}`, () => {
-  handleNavigation({ page: NavigationPage.PODS });
+test(`Test navigationHandle for ${NavigationPage.PODMAN_PODS}`, () => {
+  handleNavigation({ page: NavigationPage.PODMAN_PODS });
 
   expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/pods');
 });
 
-test(`Test navigationHandle for ${NavigationPage.POD}`, () => {
+test(`Test navigationHandle for ${NavigationPage.PODMAN_POD}`, () => {
   handleNavigation({
-    page: NavigationPage.POD,
+    page: NavigationPage.PODMAN_POD,
     parameters: {
       engineId: 'dummyEngineId',
       name: 'dummyPod',
@@ -239,142 +239,5 @@ test(`Test navigationHandle for ${NavigationPage.EDIT_CONTAINER_CONNECTION}`, ()
 
   expect(vi.mocked(router.goto)).toHaveBeenCalledWith(
     '/preferences/container-connection/edit/dummyProviderId/dummyProviderName',
-  );
-});
-
-test(`Test navigationHandle for ${NavigationPage.KUBERNETES_SERVICES}`, () => {
-  handleNavigation({
-    page: NavigationPage.KUBERNETES_SERVICES,
-  });
-
-  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/kubernetes/services');
-});
-
-test(`Test navigationHandle for ${NavigationPage.KUBERNETES_SERVICE}`, () => {
-  handleNavigation({
-    page: NavigationPage.KUBERNETES_SERVICE,
-    parameters: {
-      name: 'dummy-name',
-      namespace: 'dummy-ns',
-    },
-  });
-
-  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/kubernetes/services/dummy-name/dummy-ns/summary');
-});
-
-test(`Test navigationHandle for ${NavigationPage.KUBERNETES_DEPLOYMENTS}`, () => {
-  handleNavigation({
-    page: NavigationPage.KUBERNETES_DEPLOYMENTS,
-  });
-
-  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/kubernetes/deployments');
-});
-
-test(`Test navigationHandle for ${NavigationPage.KUBERNETES_DEPLOYMENT}`, () => {
-  handleNavigation({
-    page: NavigationPage.KUBERNETES_DEPLOYMENT,
-    parameters: {
-      name: 'dummy-name',
-      namespace: 'dummy-ns',
-    },
-  });
-
-  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/kubernetes/deployments/dummy-name/dummy-ns/summary');
-});
-
-test(`Test navigationHandle for ${NavigationPage.KUBERNETES_NODES}`, () => {
-  handleNavigation({
-    page: NavigationPage.KUBERNETES_NODES,
-  });
-
-  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/kubernetes/nodes');
-});
-
-test(`Test navigationHandle for ${NavigationPage.KUBERNETES_NODE}`, () => {
-  handleNavigation({
-    page: NavigationPage.KUBERNETES_NODE,
-    parameters: {
-      name: 'dummy-name',
-    },
-  });
-
-  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/kubernetes/nodes/dummy-name/summary');
-});
-
-test(`Test navigationHandle for ${NavigationPage.KUBERNETES_PVCS}`, () => {
-  handleNavigation({
-    page: NavigationPage.KUBERNETES_PVCS,
-  });
-
-  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/kubernetes/persistentvolumeclaims');
-});
-
-test(`Test navigationHandle for ${NavigationPage.KUBERNETES_PVC}`, () => {
-  handleNavigation({
-    page: NavigationPage.KUBERNETES_PVC,
-    parameters: {
-      name: 'dummy-name',
-      namespace: 'dummy-ns',
-    },
-  });
-
-  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/kubernetes/persistentvolumeclaims/dummy-name/dummy-ns/summary');
-});
-
-test(`Test navigationHandle for ${NavigationPage.KUBERNETES_INGRESSES_ROUTES}`, () => {
-  handleNavigation({
-    page: NavigationPage.KUBERNETES_INGRESSES_ROUTES,
-  });
-
-  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/kubernetes/ingressesRoutes');
-});
-
-test(`Test navigationHandle for ${NavigationPage.KUBERNETES_INGRESSES_ROUTE}`, () => {
-  handleNavigation({
-    page: NavigationPage.KUBERNETES_INGRESSES_ROUTE,
-    parameters: {
-      name: 'dummy-name',
-      namespace: 'dummy-ns',
-    },
-  });
-
-  expect(vi.mocked(router.goto)).toHaveBeenCalledWith(
-    '/kubernetes/ingressesRoutes/ingress/dummy-name/dummy-ns/summary',
-  );
-});
-
-test(`Test navigationHandle for ${NavigationPage.KUBERNETES_CONFIGMAPS_SECRETS}`, () => {
-  handleNavigation({
-    page: NavigationPage.KUBERNETES_CONFIGMAPS_SECRETS,
-  });
-
-  expect(vi.mocked(router.goto)).toHaveBeenCalledWith('/kubernetes/configmapsSecrets');
-});
-
-test(`Test navigationHandle for ${NavigationPage.KUBERNETES_CONFIGMAP}`, () => {
-  handleNavigation({
-    page: NavigationPage.KUBERNETES_CONFIGMAP,
-    parameters: {
-      name: 'dummy-name',
-      namespace: 'dummy-ns',
-    },
-  });
-
-  expect(vi.mocked(router.goto)).toHaveBeenCalledWith(
-    '/kubernetes/configmapsSecrets/configmap/dummy-name/dummy-ns/summary',
-  );
-});
-
-test(`Test navigationHandle for ${NavigationPage.KUBERNETES_SECRET}`, () => {
-  handleNavigation({
-    page: NavigationPage.KUBERNETES_SECRET,
-    parameters: {
-      name: 'dummy-name',
-      namespace: 'dummy-ns',
-    },
-  });
-
-  expect(vi.mocked(router.goto)).toHaveBeenCalledWith(
-    '/kubernetes/configmapsSecrets/secret/dummy-name/dummy-ns/summary',
   );
 });

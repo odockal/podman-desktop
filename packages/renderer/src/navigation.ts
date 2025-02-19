@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2023-2024 Red Hat, Inc.
+ * Copyright (C) 2023-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -81,10 +81,10 @@ export const handleNavigation = (request: InferredNavigationRequest<NavigationPa
     case NavigationPage.ONBOARDING:
       router.goto(`/preferences/onboarding/${request.parameters.extensionId}`);
       break;
-    case NavigationPage.PODS:
+    case NavigationPage.PODMAN_PODS:
       router.goto(`/pods`);
       break;
-    case NavigationPage.POD:
+    case NavigationPage.PODMAN_POD:
       router.goto(`/pods/${request.parameters.kind}/${request.parameters.name}/${request.parameters.engineId}/`);
       break;
     case NavigationPage.VOLUMES:
@@ -119,53 +119,6 @@ export const handleNavigation = (request: InferredNavigationRequest<NavigationPa
       break;
     case NavigationPage.EDIT_CONTAINER_CONNECTION:
       router.goto(`/preferences/container-connection/edit/${request.parameters.provider}/${request.parameters.name}`);
-      break;
-    case NavigationPage.KUBERNETES_SERVICES:
-      router.goto(`/kubernetes/services`);
-      break;
-    case NavigationPage.KUBERNETES_SERVICE:
-      router.goto(`/kubernetes/services/${request.parameters.name}/${request.parameters.namespace}/summary`);
-      break;
-    case NavigationPage.KUBERNETES_DEPLOYMENTS:
-      router.goto(`/kubernetes/deployments`);
-      break;
-    case NavigationPage.KUBERNETES_DEPLOYMENT:
-      router.goto(`/kubernetes/deployments/${request.parameters.name}/${request.parameters.namespace}/summary`);
-      break;
-    case NavigationPage.KUBERNETES_NODES:
-      router.goto(`/kubernetes/nodes`);
-      break;
-    case NavigationPage.KUBERNETES_NODE:
-      router.goto(`/kubernetes/nodes/${request.parameters.name}/summary`);
-      break;
-    case NavigationPage.KUBERNETES_PVCS:
-      router.goto(`/kubernetes/persistentvolumeclaims`);
-      break;
-    case NavigationPage.KUBERNETES_PVC:
-      router.goto(
-        `/kubernetes/persistentvolumeclaims/${request.parameters.name}/${request.parameters.namespace}/summary`,
-      );
-      break;
-    case NavigationPage.KUBERNETES_INGRESSES_ROUTES:
-      router.goto(`/kubernetes/ingressesRoutes`);
-      break;
-    case NavigationPage.KUBERNETES_INGRESSES_ROUTE:
-      router.goto(
-        `/kubernetes/ingressesRoutes/ingress/${request.parameters.name}/${request.parameters.namespace}/summary`,
-      );
-      break;
-    case NavigationPage.KUBERNETES_CONFIGMAPS_SECRETS:
-      router.goto(`/kubernetes/configmapsSecrets`);
-      break;
-    case NavigationPage.KUBERNETES_CONFIGMAP:
-      router.goto(
-        `/kubernetes/configmapsSecrets/configmap/${request.parameters.name}/${request.parameters.namespace}/summary`,
-      );
-      break;
-    case NavigationPage.KUBERNETES_SECRET:
-      router.goto(
-        `/kubernetes/configmapsSecrets/secret/${request.parameters.name}/${request.parameters.namespace}/summary`,
-      );
       break;
   }
 };

@@ -1,5 +1,6 @@
 <script lang="ts">
 import { Button, Checkbox, ErrorMessage, Link } from '@podman-desktop/ui-svelte';
+import { onMount } from 'svelte';
 
 import FeedbackForm from '/@/lib/feedback/FeedbackForm.svelte';
 import type { FeedbackCategory, GitHubIssue } from '/@api/feedback';
@@ -42,6 +43,10 @@ let existingIssuesLink = $state(
 
 $effect(() => contentChange(Boolean(issueTitle || issueDescription)));
 
+onMount(async () => {
+  await window.telemetryTrack(`feedback.FormOpened`, { feedbackCategory: category });
+});
+
 async function openGitHubIssues(): Promise<void> {
   onCloseForm(false);
   await window.openExternal(existingIssuesLink);
@@ -55,12 +60,22 @@ async function previewOnGitHub(): Promise<void> {
     includeSystemInfo: $state.snapshot(includeSystemInfo),
     includeExtensionInfo: $state.snapshot(includeExtensionInfo),
   };
-  try {
-    await window.previewOnGitHub(issueProperties);
-    onCloseForm(false);
-  } catch (error: unknown) {
-    console.error('There was a problem with preview on GitHub', error);
-  }
+  let telemetryEventProperties: { [property: string]: unknown } = { feedbackCategory: category };
+
+  window
+    .previewOnGitHub(issueProperties)
+    .then(() => {
+      onCloseForm(false);
+    })
+    .catch((error: unknown) => {
+      telemetryEventProperties['error'] = error;
+      console.error('There was a problem with preview on GitHub', error);
+    })
+    .finally(() => {
+      window
+        .telemetryTrack(`feedback.FormSubmitted`, telemetryEventProperties)
+        .catch((err: unknown) => console.error('Error sending feedback.formSubmitted telemetry', err));
+    });
 }
 </script>
 

@@ -20,6 +20,7 @@ import React from 'react';
 
 import PodmanAILabBanner from '../components/PodmanAILabBanner';
 import TailWindThemeSelector from '../components/TailWindThemeSelector';
+import { TelemetryLink } from '../components/TelemetryLink';
 
 function DownloadClientLinks(): JSX.Element {
   let operatingSystem = '';
@@ -47,11 +48,13 @@ function DownloadClientLinks(): JSX.Element {
   if (operatingSystem !== '') {
     mainButton = (
       <div>
-        <Link
+        <TelemetryLink
           className="no-underline hover:no-underline inline-flex text-white hover:text-white bg-violet-600 border-0 py-4 px-8 mt-6 mb-1 focus:outline-hidden hover:bg-violet-700 rounded-sm text-lg"
+          eventPath="landing"
+          eventTitle="hero-download"
           to={'/downloads/' + url}>
           <FontAwesomeIcon size="2x" icon={varIcon as IconProp} className="px-2" /> Download Now
-        </Link>
+        </TelemetryLink>
         <caption className="block mt-0 dark:text-gray-400">
           For <strong>{operatingSystem}</strong> <em>(browser-detected)</em>
         </caption>

@@ -94,6 +94,7 @@ import type { KubeContext } from '/@api/kubernetes-context.js';
 import type { ContextHealth } from '/@api/kubernetes-contexts-healths.js';
 import type { ContextPermission } from '/@api/kubernetes-contexts-permissions.js';
 import type { ContextGeneralState, ResourceName } from '/@api/kubernetes-contexts-states.js';
+import type { KubernetesNavigationRequest } from '/@api/kubernetes-navigation.js';
 import type { ForwardConfig, ForwardOptions } from '/@api/kubernetes-port-forward-model.js';
 import type { ResourceCount } from '/@api/kubernetes-resource-count.js';
 import type { KubernetesContextResources } from '/@api/kubernetes-resources.js';
@@ -245,27 +246,16 @@ export class PluginSystem {
     return window.webContents;
   }
 
-  // encode the error to be sent over IPC
-  // this is needed because on the client it will display
-  // a generic error message 'Error invoking remote method' and
-  // it's not useful for end user
-  encodeIpcError(e: unknown): { name?: string; message: unknown; extra?: Record<string, unknown> } {
-    let builtError;
-    if (e instanceof Error) {
-      builtError = { name: e.name, message: e.message, extra: { ...e } };
-    } else {
-      builtError = { message: e };
-    }
-    return builtError;
-  }
-
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ipcHandle(channel: string, listener: (event: IpcMainInvokeEvent, ...args: any[]) => Promise<void> | any): any {
+  ipcHandle(channel: string, listener: (event: IpcMainInvokeEvent, ...args: any[]) => Promise<void> | any): void {
     ipcMain.handle(channel, async (...args) => {
       try {
         return { result: await Promise.resolve(listener(...args)) };
-      } catch (e) {
-        return { error: this.encodeIpcError(e) };
+      } catch (error) {
+        // From error instance only message property will get through.
+        // Sending non error instance as a message property of an object triggers
+        // coercion of message property to String.
+        return error instanceof Error ? { error } : { error: { message: error } };
       }
     });
   }
@@ -673,6 +663,12 @@ export class PluginSystem {
       commandRegistry,
       onboardingRegistry,
     );
+
+    commandRegistry.registerCommand('kubernetes-navigation', (navRequest: KubernetesNavigationRequest) => {
+      apiSender.send('kubernetes-navigation', navRequest);
+    });
+
+    navigationManager.registerRoute({ routeId: 'kubernetes', commandId: 'kubernetes-navigation' });
 
     const extensionAnalyzer = new ExtensionAnalyzer();
 
@@ -2837,6 +2833,13 @@ export class PluginSystem {
       }
       window.close();
     });
+
+    this.ipcHandle(
+      'navigation:navigateToRoute',
+      async (_listener, routeId: string, ...args: unknown[]): Promise<void> => {
+        return navigationManager.navigateToRoute(routeId, ...args);
+      },
+    );
 
     this.ipcHandle('onboardingRegistry:listOnboarding', async (): Promise<OnboardingInfo[]> => {
       return onboardingRegistry.listOnboarding();

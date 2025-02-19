@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2024-2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,8 +30,8 @@ export enum NavigationPage {
   IMAGE_BUILD = 'image-build',
   IMAGE = 'image',
   ONBOARDING = 'preferences-onboarding',
-  PODS = 'pods',
-  POD = 'pod',
+  PODMAN_PODS = 'pods',
+  PODMAN_POD = 'pod',
   VOLUMES = 'volumes',
   VOLUME = 'volume',
   CONTRIBUTION = 'contribution',
@@ -44,17 +44,4 @@ export enum NavigationPage {
   RESOURCES = 'resources',
   EDIT_CONTAINER_CONNECTION = 'edit-container-connection',
   DEPLOY_TO_KUBE = 'deploy-to-kube',
-  KUBERNETES_SERVICES = 'kubernetes-services',
-  KUBERNETES_SERVICE = 'kubernetes-service',
-  KUBERNETES_DEPLOYMENTS = 'kubernetes-deployments',
-  KUBERNETES_DEPLOYMENT = 'kubernetes-deployment',
-  KUBERNETES_NODES = 'kubernetes-nodes',
-  KUBERNETES_NODE = 'kubernetes-node',
-  KUBERNETES_PVCS = 'kubernetes-pvcs',
-  KUBERNETES_PVC = 'kubernetes-pvc',
-  KUBERNETES_INGRESSES_ROUTES = 'kubernetes-ingresses-routes',
-  KUBERNETES_INGRESSES_ROUTE = 'kubernetes-ingresses-route',
-  KUBERNETES_CONFIGMAPS_SECRETS = 'kubernetes-configmaps-secrets',
-  KUBERNETES_CONFIGMAP = 'kubernetes-configmap',
-  KUBERNETES_SECRET = 'kubernetes-secret',
 }

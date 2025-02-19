@@ -33,6 +33,7 @@ import { ContextPermissionsChecker } from './context-permissions-checker.js';
 import { ContextResourceRegistry } from './context-resource-registry.js';
 import type { DispatcherEvent } from './contexts-dispatcher.js';
 import { ContextsDispatcher } from './contexts-dispatcher.js';
+import { CronjobsResourceFactory } from './cronjobs-resource-factory.js';
 import { DeploymentsResourceFactory } from './deployments-resource-factory.js';
 import { IngressesResourceFactory } from './ingresses-resource-factory.js';
 import { NodesResourceFactory } from './nodes-resource-factory.js';
@@ -97,15 +98,16 @@ export class ContextsManagerExperimental {
 
   protected getResourceFactories(): ResourceFactory[] {
     return [
-      new PodsResourceFactory(),
-      new DeploymentsResourceFactory(),
       new ConfigmapsResourceFactory(),
+      new CronjobsResourceFactory(),
+      new DeploymentsResourceFactory(),
+      new IngressesResourceFactory(),
+      new NodesResourceFactory(),
+      new PodsResourceFactory(),
+      new PVCsResourceFactory(),
+      new RoutesResourceFactory(),
       new SecretsResourceFactory(),
       new ServicesResourceFactory(),
-      new PVCsResourceFactory(),
-      new NodesResourceFactory(),
-      new IngressesResourceFactory(),
-      new RoutesResourceFactory(),
     ];
   }
 

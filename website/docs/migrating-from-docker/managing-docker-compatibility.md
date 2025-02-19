@@ -9,7 +9,7 @@ tags: [managing-docker-compatibility]
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Managing Docker compatibility
+# Managing Docker compatibility - Experimental feature
 
 With Podman Desktop, you can configure a Docker-compatible environment using the **Settings** page. After configuration, your Docker tools are directed to use a Podman engine and your Compose applications can be run using the Podman CLI.
 
@@ -33,7 +33,10 @@ As a developer, you can:
 
 #### Prerequisites
 
+Make sure you have:
+
 - [A running Podman machine](/docs/podman/creating-a-podman-machine).
+- Enabled the [Docker compatibility](/docs/migrating-from-docker/customizing-docker-compatibility#enable-docker-compatibility) feature.
 
 <Tabs>
    <TabItem value="win" label="Windows" className="markdown">
