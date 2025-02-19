@@ -393,7 +393,7 @@ jobs:
       - name: Run E2E tests in ${{ matrix.mode == 'production' && 'Production' || 'Development' }} Mode
         if: runner.os == 'Windows'
         run: |
-          if ( ${{ matrix.mode }} -eq 'production' ) {
+          if ( "${{ matrix.mode }}" -eq 'production' ) {
             echo "Compiling the Podman Desktop in production mode"
             $env:ELECTRON_ENABLE_INSPECT=true
             pnpm compile:current --win nsis
