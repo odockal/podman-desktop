@@ -378,6 +378,7 @@ jobs:
         run: pnpm install
 
       - name: Run Smoke E2E tests in ${{ matrix.mode == 'production' && 'Production' || 'Development' }} Mode
+        if: runner.os == 'Linux'
         run: |
           if [ ${{ matrix.mode }} == 'production' ]; then
             echo "Compiling the Podman Desktop in production mode"
@@ -387,6 +388,19 @@ jobs:
             echo "Podman Desktop built binary: $path"
             export PODMAN_DESKTOP_BINARY_PATH=$path
           fi
+          pnpm test:e2e:smoke
+
+      - name: Run E2E tests in ${{ matrix.mode == 'production' && 'Production' || 'Development' }} Mode
+        if: runner.os == 'Windows'
+        run: |
+          if ( ${{ matrix.mode }} -eq 'production' ) {
+            echo "Compiling the Podman Desktop in production mode"
+            $env:ELECTRON_ENABLE_INSPECT=true
+            pnpm compile:current --win nsis
+            $path=('./dist/win-unpacked/Podman Desktop.exe' | resolve-path).ProviderPath
+            echo $path
+            echo ("PODMAN_DESKTOP_BINARY=" + $path) >> $env:GITHUB_ENV
+          }
           pnpm test:e2e:all
 
       - name: Publish Test Report
