@@ -6,7 +6,7 @@ jobs:
     name: A job to get pd latest url
     steps:
       - id: url
-        uses: odockal/podman-deskto-e2e/get-pd-latest@main
+        uses: odockal/podman-deskto-e2e/get-pd-latest@099b0a4d6e1dd96ddd84b380643aecd305f8d121
         with:
           suffix: 'setup-x64.exe'
           gh_token: ${{ secrets.GITHUB_TOKEN }}
