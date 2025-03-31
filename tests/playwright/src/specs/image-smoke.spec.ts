@@ -55,7 +55,6 @@ test.describe.serial('Image workflow verification', { tag: '@smoke' }, () => {
     await playExpect
       .poll(async () => updatedImages.waitForImageExists(helloContainer, 30_000), { timeout: 0 })
       .toBeTruthy();
-
     playExpect(await updatedImages.getCurrentStatusOfImage(helloContainer)).toBe('UNUSED');
   });
 

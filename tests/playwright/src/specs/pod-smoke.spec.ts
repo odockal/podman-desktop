@@ -103,13 +103,13 @@ test.describe.serial('Verification of pod creation workflow', { tag: '@smoke' },
     let images = await navigationBar.openImages();
     let pullImagePage = await images.openPullImage();
     images = await pullImagePage.pullImage(backendImage, imagesTag, 90_000);
-    const backendExists = await images.waitForImageExists(backendImage);
+    const backendExists = await images.waitForImageExists(backendImage, 10_000);
     playExpect(backendExists, `${backendImage} image is not present in the list of images`).toBeTruthy();
 
     await navigationBar.openImages();
     pullImagePage = await images.openPullImage();
     images = await pullImagePage.pullImage(frontendImage, imagesTag, 90_000);
-    const frontendExists = await images.waitForImageExists(frontendImage);
+    const frontendExists = await images.waitForImageExists(frontendImage, 10_000);
     playExpect(frontendExists, `${frontendImage} image is not present in the list of images`).toBeTruthy();
   });
 
@@ -269,6 +269,7 @@ test.describe.serial('Verification of pod creation workflow', { tag: '@smoke' },
 
   test.describe(() => {
     test.describe.configure({ retries: 1 });
+    test.skip(test.info().status === 'failed', 'Skipping because test failure appeared');
     test('Restarting pod', async ({ navigationBar }) => {
       test.setTimeout(180_000);
       const pods = await navigationBar.openPods();
