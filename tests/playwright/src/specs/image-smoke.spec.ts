@@ -51,7 +51,7 @@ test.describe.serial('Image workflow verification', { tag: '@smoke' }, () => {
     const pullImagePage = await imagesPage.openPullImage();
     const updatedImages = await pullImagePage.pullImage(helloContainer);
 
-    const exists = await updatedImages.waitForImageExists(helloContainer);
+    const exists = await updatedImages.waitForImageExists(helloContainer, 10_000);
     playExpect(exists, `${helloContainer} image not present in the list of images`).toBeTruthy();
     playExpect(await updatedImages.getCurrentStatusOfImage(helloContainer)).toBe('UNUSED');
   });
