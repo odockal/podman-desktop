@@ -21,6 +21,7 @@ import { execSync } from 'node:child_process';
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
+import type { ExtensionType } from '../model/core/extensions';
 import { ResourceElementActions } from '../model/core/operations';
 import { ResourceElementState } from '../model/core/states';
 import { CLIToolsPage } from '../model/pages/cli-tools-page';
@@ -447,4 +448,12 @@ export async function setStatusBarProvidersFeature(
   const settingsBar = new SettingsBar(page);
   const experimentalPage = await settingsBar.openTabPage(ExperimentalPage);
   await experimentalPage.setExperimentalCheckbox(experimentalPage.statusBarProvidersCheckbox, enable);
+}
+
+export async function disableExtension(page: Page, extension: ExtensionType): Promise<void> {
+  const navBar = new NavigationBar(page);
+  const extensions = await navBar.openExtensions();
+  await extensions.extensionIsInstalled(extension.extensionLabel);
+  const extensionCard = await extensions.getInstalledExtension(extension.extensionName, extension.extensionLabel);
+  await extensionCard.disableExtension();
 }

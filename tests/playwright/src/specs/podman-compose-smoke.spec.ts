@@ -25,7 +25,7 @@ import { ResourcesPage } from '../model/pages/resources-page';
 import { SettingsBar } from '../model/pages/settings-bar';
 import { expect as playExpect, test } from '../utility/fixtures';
 import { deleteContainer, deleteImage, runComposeUpFromCLI } from '../utility/operations';
-import { isGHActions, isMac } from '../utility/platform';
+import { isGHActions, isLinux, isMac, isWindows } from '../utility/platform';
 import { waitForPodmanMachineStartup } from '../utility/wait';
 
 const RESOURCE_NAME: string = 'Compose';
@@ -56,8 +56,9 @@ test.afterAll(async ({ page, runner }) => {
 });
 
 test.describe.serial('Compose compose workflow verification', { tag: '@smoke' }, () => {
+  test.skip(!!isGHActions && !!isWindows, 'This test should not run on Windows platform in Github Actions');
   test('Verify Compose was installed', async ({ page, navigationBar }) => {
-    test.skip(!!isGHActions, 'This test should not run on Ubuntu or windows platform in Github Actions');
+    test.skip(!!isGHActions && !!isLinux, 'This test should not run on Ubuntu in Github Actions');
     test.skip(!!isMac, 'Currently there is an issue with running this test on macOS platform');
 
     await navigationBar.openSettings();
