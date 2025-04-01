@@ -100,6 +100,7 @@ test.describe.serial('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
     });
   test.describe
     .serial('Image Manifest Validation - Complex Containerfile', () => {
+      test.skip(!!isGHActions && !!isWindows, 'Skipping on Windows Github Actions runner');
       test('Build the image using cross-arch build (complex)', async ({ page }) => {
         await playExpect(imagesPage.heading).toBeVisible();
 
