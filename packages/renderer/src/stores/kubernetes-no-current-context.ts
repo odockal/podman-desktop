@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,14 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import * as os from 'node:os';
+import { derived } from 'svelte/store';
 
-export const isLinux = os.platform() === 'linux';
-export const isMac = os.platform() === 'darwin';
-export const isWindows = os.platform() === 'win32';
-export const archType = os.arch();
+import { kubernetesContexts } from './kubernetes-contexts';
 
-export const isCI = process.env.CI ? process.env.CI === 'true' : false;
-export const isGHActions = process.env.GITHUB_ACTIONS === 'true';
+// kubernetesNoCurrentContext is true when no kubernetes current context is found
+// (generally when there id no kubeconfig file, but also if the file is empty or with no contexts, or with no current context)
+// this store is usable for both Kubernetes experimental and non-experimental modes
+export const kubernetesNoCurrentContext = derived(
+  [kubernetesContexts],
+  ([contexts]) => !contexts.find(c => c.currentContext),
+);
