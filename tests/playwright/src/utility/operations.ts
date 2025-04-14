@@ -21,6 +21,7 @@ import { execSync } from 'node:child_process';
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
+import type { ExtensionType } from '../model/core/extensions';
 import { ResourceElementActions } from '../model/core/operations';
 import { ResourceElementState } from '../model/core/states';
 import { CLIToolsPage } from '../model/pages/cli-tools-page';
