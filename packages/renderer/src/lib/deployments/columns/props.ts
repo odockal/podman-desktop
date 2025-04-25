@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (C) 2024 Red Hat, Inc.
+ * Copyright (C) 2025 Red Hat, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,8 @@
  * SPDX-License-Identifier: Apache-2.0
  ***********************************************************************/
 
-import * as os from 'node:os';
+import type { DeploymentUI } from '../DeploymentUI';
 
-export const isLinux = os.platform() === 'linux';
-export const isMac = os.platform() === 'darwin';
-export const isWindows = os.platform() === 'win32';
-export const archType = os.arch();
-
-export const isCI = process.env.CI ? process.env.CI === 'true' : false;
-export const isGHActions = process.env.GITHUB_ACTIONS === 'true';
+export interface Props {
+  object: DeploymentUI;
+}

@@ -40,7 +40,7 @@ After each step, quit and restart Podman Desktop to ensure that it can detect yo
 1. Reinstall Podman with the Podman installer.
 1. Reinstall Podman with another method.
 
-## Podman Desktop fails creating a Podman machine
+## Podman Desktop fails to create a Podman machine
 
 #### Issue
 
@@ -60,7 +60,7 @@ Podman Desktop might fail creating a Podman machine.
 
 #### Issue
 
-Podman Desktop might fail starting a Podman machine.
+Podman Desktop might fail starting a Podman machine. On the **Settings > Resources** page, the machine does not switch to the running phase for quite some time.
 
 #### Workaround
 
@@ -71,6 +71,8 @@ Podman Desktop might fail starting a Podman machine.
    ```
 
 1. If the start fails, read the logs carefully to continue troubleshooting.
+
+Alternatively, you can run the `podman machine reset` command, and [create a new machine](/docs/podman/creating-a-podman-machine) using the Podman Desktop UI.
 
 ## Podman Desktop fails to list images or containers
 
