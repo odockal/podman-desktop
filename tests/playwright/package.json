@@ -3,7 +3,9 @@
   "version": "1.9.0-next",
   "description": "Playwright-based testing libraries for Podman Desktop and its extensions",
   "type": "module",
+  "repository": "https://github.com/podman-desktop/podman-desktop",
   "publishConfig": {
+    "provenance": true,
     "access": "public"
   },
   "main": "dist/index.js",
@@ -18,8 +20,8 @@
   "devDependencies": {
     "@playwright/test": "1.52.0",
     "@types/node": "^22",
-    "electron": "35.2.0",
+    "electron": "36.3.2",
     "typescript": "^5.8.3",
-    "vitest": "^3.1.2"
+    "vitest": "^3.1.4"
   }
 }

@@ -21,6 +21,7 @@ import { execSync } from 'node:child_process';
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
+import type { ExtensionType } from '../model/core/extensions';
 import { ResourceElementActions } from '../model/core/operations';
 import { ResourceElementState } from '../model/core/states';
 import { CLIToolsPage } from '../model/pages/cli-tools-page';
@@ -31,6 +32,7 @@ import { ResourcesPage } from '../model/pages/resources-page';
 import { SettingsBar } from '../model/pages/settings-bar';
 import { VolumeDetailsPage } from '../model/pages/volume-details-page';
 import { NavigationBar } from '../model/workbench/navigation';
+import { isLinux } from './platform';
 import { waitUntil, waitWhile } from './wait';
 
 /**
@@ -317,9 +319,14 @@ export async function ensureCliInstalled(
 
 export async function createPodmanMachineFromCLI(): Promise<void> {
   return test.step('Create Podman machine from CLI', async () => {
+    if (isLinux) return;
+
+    const podmanMachineMode = process.env.PODMAN_ROOTFUL === '0' ? '' : '--rootful';
+    const userModeNetworking = process.env.PODMAN_NETWORKING === '1' ? '--user-networking' : '';
+
     try {
-      // eslint-disable-next-line sonarjs/no-os-command-from-path
-      execSync('podman machine init --rootful');
+      // eslint-disable-next-line sonarjs/no-os-command-from-path, sonarjs/os-command
+      execSync(`podman machine init ${podmanMachineMode} ${userModeNetworking}`);
     } catch (error) {
       if (error instanceof Error && error.message.includes('VM already exists')) {
         console.log(`Podman machine already exists, skipping creation.`);
@@ -331,7 +338,7 @@ export async function createPodmanMachineFromCLI(): Promise<void> {
       execSync('podman machine start');
       console.log('Default podman machine started');
     } catch (error) {
-      if (error instanceof Error && error.message.includes('VM already running')) {
+      if (error instanceof Error && error.message.includes('already running')) {
         console.log('Default podman machine already started, skipping start.');
       }
     }
@@ -429,4 +436,12 @@ export async function setDockerCompatibilityFeature(page: Page, enable: boolean)
 
   //Close the preferences bar
   await settingsBar.expandPreferencesTab();
+}
+
+export async function disableExtension(page: Page, extension: ExtensionType): Promise<void> {
+  const navBar = new NavigationBar(page);
+  const extensions = await navBar.openExtensions();
+  await extensions.extensionIsInstalled(extension.extensionLabel);
+  const extensionCard = await extensions.getInstalledExtension(extension.extensionName, extension.extensionLabel);
+  await extensionCard.disableExtension();
 }

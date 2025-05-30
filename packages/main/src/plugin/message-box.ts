@@ -20,6 +20,13 @@ import { Deferred } from './util/deferred.js';
 
 type DialogType = 'none' | 'info' | 'error' | 'question' | 'warning';
 
+export interface DropdownType {
+  heading: string;
+  buttons: string[];
+}
+
+export type ButtonsType = string | DropdownType;
+
 /**
  * Options to configure the behavior of the message box UI.
  */
@@ -39,7 +46,7 @@ export interface MessageBoxOptions {
   /**
    * Text for buttons.
    */
-  buttons?: string[];
+  buttons?: ButtonsType[];
   /**
    * The (optional) type, one of 'none' | 'info' | 'error' | 'question' | 'warning'.
    */
@@ -52,10 +59,15 @@ export interface MessageBoxOptions {
    * The (optional) index of the button to be used to cancel the dialog.
    */
   cancelId?: number;
+  /**
+   * An additional (optional) markdown detailed message aligned to center
+   */
+  footerMarkdownDescription?: string;
 }
 
 export interface MessageBoxReturnValue {
   response: number | undefined;
+  dropdownIndex?: number;
 }
 
 export class MessageBox {
@@ -84,6 +96,7 @@ export class MessageBox {
       type: options.type,
       defaultId: options.defaultId,
       cancelId: options.cancelId,
+      footerMarkdownDescription: options.footerMarkdownDescription,
     };
 
     // need to send the options to the frontend
@@ -93,7 +106,22 @@ export class MessageBox {
     return deferred.promise;
   }
 
-  async showDialog(type: DialogType, title: string, message: string, items: string[]): Promise<string | undefined> {
+  isDropdownType(response?: ButtonsType): response is DropdownType {
+    return (
+      typeof response === 'object' &&
+      response !== null &&
+      'heading' in response &&
+      'buttons' in response &&
+      Array.isArray((response as DropdownType).buttons)
+    );
+  }
+
+  async showDialog(
+    type: DialogType,
+    title: string,
+    message: string,
+    items: ButtonsType[],
+  ): Promise<string | undefined> {
     const result = await this.showMessageBox({
       title: title,
       message: message,
@@ -102,14 +130,18 @@ export class MessageBox {
     });
 
     if (result.response !== undefined && result.response >= 0) {
-      return items[result.response];
+      const response = items[result.response];
+      if (result.dropdownIndex !== undefined && result.dropdownIndex >= 0) {
+        if (this.isDropdownType(response)) return response.buttons[result.dropdownIndex];
+      }
+      if (typeof response === 'string') return response;
     }
 
     return undefined;
   }
 
   // this method is called by the frontend when the user selected a button
-  async onDidSelectButton(id: number, selectedIndex: number | undefined): Promise<void> {
+  async onDidSelectButton(id: number, selectedIndex?: number, dropdownIndex?: number): Promise<void> {
     // get the callback
     const callback = this.callbacksMessageBox.get(id);
 
@@ -118,6 +150,7 @@ export class MessageBox {
       // grab item
       const val: MessageBoxReturnValue = {
         response: selectedIndex,
+        dropdownIndex: dropdownIndex,
       };
       // resolve the promise
       callback.resolve(val);

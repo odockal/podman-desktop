@@ -38,7 +38,6 @@ UI guidelines -->
   color: var(--pd-link);
   text-decoration: none;
   border-radius: 4px;
-  padding: 0.125rem;
 }
 .markdown :global(a):hover {
   background-color: var(--pd-link-hover-bg);

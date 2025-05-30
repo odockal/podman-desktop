@@ -261,8 +261,8 @@ export class KubernetesClient {
         if (!val?.trim()) {
           val = defaultKubeconfigPath;
         }
-        this.setupWatcher(val);
         await this.setKubeconfig(Uri.file(val));
+        this.setupWatcher(val);
       }
     });
   }
@@ -278,6 +278,17 @@ export class KubernetesClient {
     this.kubeConfigWatcher = this.fileSystemMonitoring.createFileSystemWatcher(kubeconfigFile);
 
     const location = Uri.file(kubeconfigFile);
+    const notifyKubeConfigExist = async (): Promise<void> => {
+      await this.refresh();
+      this._onDidUpdateKubeconfig.fire({ type: 'CREATE', location });
+      this.apiSender.send('kubernetes-context-update');
+    };
+
+    if (fs.existsSync(kubeconfigFile)) {
+      notifyKubeConfigExist().catch((error: unknown) => {
+        console.error('Error while checking kubeconfig', error);
+      });
+    }
 
     // needs to refresh
     this.kubeConfigWatcher.onDidChange(async () => {
@@ -287,9 +298,7 @@ export class KubernetesClient {
     });
 
     this.kubeConfigWatcher.onDidCreate(async () => {
-      await this.refresh();
-      this._onDidUpdateKubeconfig.fire({ type: 'CREATE', location });
-      this.apiSender.send('kubernetes-context-update');
+      await notifyKubeConfigExist();
     });
 
     this.kubeConfigWatcher.onDidDelete(() => {
@@ -363,6 +372,78 @@ export class KubernetesClient {
       });
     });
     return kubeContexts;
+  }
+
+  findNewContextName(contextName: string): string {
+    let counter = 1;
+    let newName = `${contextName}-${counter}`;
+    // Keep creating new name by adding 1 to name until not existing name is found
+    while (this.kubeConfig.contexts.find(context => context.name === newName)) {
+      counter += 1;
+      newName = `${contextName}-${counter}`;
+    }
+    return newName;
+  }
+
+  async duplicateContext(contextName: string): Promise<void> {
+    const newConfig = new KubeConfig();
+    const newName = this.findNewContextName(contextName);
+    const originalContext = this.kubeConfig.contexts.find(context => context.name === contextName);
+    if (!originalContext) return;
+
+    newConfig.loadFromOptions({
+      clusters: this.kubeConfig.clusters,
+      users: this.kubeConfig.users,
+      currentContext: this.kubeConfig.currentContext,
+      contexts: [
+        ...this.kubeConfig.contexts,
+        {
+          ...originalContext,
+          name: newName,
+        },
+      ],
+    });
+
+    await this.saveKubeConfig(newConfig);
+    // the config is saved back only if saving the file succeeds
+    this.kubeConfig = newConfig;
+    // We send an update event here, even if another one will be sent after the file change is detected,
+    // because that one can get some time to be sent (as cluster connectivity will be tested)
+    this.apiSender.send('kubernetes-context-update');
+  }
+
+  async updateContext(contextName: string, newContextName: string, newContextNamespace: string): Promise<void> {
+    const newConfig = new KubeConfig();
+
+    const originalContext = this.kubeConfig.contexts.find(context => context.name === contextName);
+    const newContexts = this.kubeConfig.contexts.filter(ctx => ctx.name !== contextName);
+    if (!originalContext) throw new Error('Context name was not found in kube config');
+
+    const namespaceField = newContextNamespace !== '' ? { namespace: newContextNamespace } : {};
+
+    const editedContext = {
+      ...originalContext,
+      name: newContextName,
+      ...namespaceField,
+    };
+
+    if (newContextNamespace === '') {
+      delete editedContext.namespace;
+    }
+
+    newConfig.loadFromOptions({
+      clusters: this.kubeConfig.clusters,
+      users: this.kubeConfig.users,
+      currentContext: this.currentContextName === contextName ? newContextName : this.kubeConfig.currentContext,
+      contexts: [editedContext, ...newContexts],
+    });
+
+    await this.saveKubeConfig(newConfig);
+    // the config is saved back only if saving the file succeeds
+    this.kubeConfig = newConfig;
+    // We send an update event here, even if another one will be sent after the file change is detected,
+    // because that one can get some time to be sent (as cluster connectivity will be tested)
+    this.apiSender.send('kubernetes-context-update');
   }
 
   async deleteContext(contextName: string): Promise<Context[]> {

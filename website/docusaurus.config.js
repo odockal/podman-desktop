@@ -439,12 +439,11 @@ const config = {
           },
           { to: '/blog', label: 'Blog', position: 'left' },
           {
-            type: 'custom-downloadButton',
+            type: 'custom-githubStarsButton',
             position: 'right',
           },
           {
-            href: 'https://github.com/podman-desktop/podman-desktop',
-            className: 'header-github-link',
+            type: 'custom-downloadButton',
             position: 'right',
           },
         ],

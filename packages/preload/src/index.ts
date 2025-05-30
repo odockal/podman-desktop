@@ -537,6 +537,7 @@ export function initExposure(): void {
       engineId: string;
       containerId: string;
       callback: (name: string, data: string) => void;
+      cancellableTokenId?: number;
     }): Promise<void> => {
       onDataCallbacksLogsContainerId++;
       onDataCallbacksLogsContainer.set(onDataCallbacksLogsContainerId, logsParams.callback);
@@ -544,6 +545,7 @@ export function initExposure(): void {
         engineId: logsParams.engineId,
         containerId: logsParams.containerId,
         onDataId: onDataCallbacksLogsContainerId,
+        cancellableTokenId: logsParams.cancellableTokenId,
       });
     },
   );
@@ -1242,6 +1244,7 @@ export function initExposure(): void {
       eventCollect: (key: symbol, eventName: 'finish' | 'stream' | 'error', data: string) => void,
       cancellableTokenId?: number,
       buildargs?: { [key: string]: string },
+      taskId?: number,
     ): Promise<unknown> => {
       onDataCallbacksBuildImageId++;
       onDataCallbacksBuildImage.set(onDataCallbacksBuildImageId, eventCollect);
@@ -1256,6 +1259,7 @@ export function initExposure(): void {
         onDataCallbacksBuildImageId,
         cancellableTokenId,
         buildargs,
+        taskId,
       );
     },
   );
@@ -1771,8 +1775,8 @@ export function initExposure(): void {
   );
   contextBridge.exposeInMainWorld(
     'sendShowMessageBoxOnSelect',
-    async (messageBoxId: number, selectedIndex: number | undefined): Promise<void> => {
-      return ipcInvoke('showMessageBox:onSelect', messageBoxId, selectedIndex);
+    async (messageBoxId: number, selectedIndex?: number, dropdownIndex?: number): Promise<void> => {
+      return ipcInvoke('showMessageBox:onSelect', messageBoxId, selectedIndex, dropdownIndex);
     },
   );
 
@@ -1872,6 +1876,15 @@ export function initExposure(): void {
     return ipcInvoke('kubernetes-client:getDetailedContexts');
   });
 
+  contextBridge.exposeInMainWorld('kubernetesDuplicateContext', async (contextName: string): Promise<void> => {
+    return ipcInvoke('kubernetes-client:duplicateContext', contextName);
+  });
+  contextBridge.exposeInMainWorld(
+    'kubernetesUpdateContext',
+    async (contextName: string, newContextName: string, newContextNamespace: string): Promise<void> => {
+      return ipcInvoke('kubernetes-client:updateContext', contextName, newContextName, newContextNamespace);
+    },
+  );
   contextBridge.exposeInMainWorld('kubernetesDeleteContext', async (contextName: string): Promise<Context[]> => {
     return ipcInvoke('kubernetes-client:deleteContext', contextName);
   });
