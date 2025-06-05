@@ -19,9 +19,11 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { dockerExtension } from '../model/core/extensions';
 import { ImageDetailsPage } from '../model/pages/image-details-page';
 import { expect as playExpect, test } from '../utility/fixtures';
-import { untagImagesFromPodman } from '../utility/operations';
+import { disableExtension, untagImagesFromPodman } from '../utility/operations';
+import { isGHActions, isWindows } from '../utility/platform';
 import { waitForPodmanMachineStartup } from '../utility/wait';
 
 const helloContainer = 'quay.io/podman/hello';
@@ -36,6 +38,9 @@ test.beforeAll(async ({ runner, welcomePage, page }) => {
   runner.setVideoAndTraceName('pull-image-e2e');
 
   await welcomePage.handleWelcomePage(true);
+  if (isGHActions && isWindows) {
+    await disableExtension(page, dockerExtension);
+  }
   await waitForPodmanMachineStartup(page);
 });
 
@@ -55,7 +60,6 @@ test.describe.serial('Image workflow verification', { tag: '@smoke' }, () => {
     await playExpect
       .poll(async () => updatedImages.waitForImageExists(helloContainer, 30_000), { timeout: 0 })
       .toBeTruthy();
-
     playExpect(await updatedImages.getCurrentStatusOfImage(helloContainer)).toBe('UNUSED');
   });
 

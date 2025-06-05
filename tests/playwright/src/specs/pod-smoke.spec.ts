@@ -18,11 +18,13 @@
 
 import * as os from 'node:os';
 
+import { dockerExtension } from '../model/core/extensions';
 import { ContainerState, PodState } from '../model/core/states';
 import type { ContainerInteractiveParams } from '../model/core/types';
 import { PodsPage } from '../model/pages/pods-page';
 import { expect as playExpect, test } from '../utility/fixtures';
-import { deleteContainer, deleteImage, deletePod } from '../utility/operations';
+import { deleteContainer, deleteImage, deletePod, disableExtension } from '../utility/operations';
+import { isGHActions, isWindows } from '../utility/platform';
 import { waitForPodmanMachineStartup, waitUntil, waitWhile } from '../utility/wait';
 
 let backendPort: string;
@@ -44,6 +46,9 @@ test.beforeAll(async ({ runner, welcomePage, page, navigationBar }) => {
   runner.setVideoAndTraceName('pods-e2e');
   await welcomePage.handleWelcomePage(true);
   await waitForPodmanMachineStartup(page);
+  if (isGHActions && isWindows) {
+    await disableExtension(page, dockerExtension);
+  }
   // wait giving a time to podman desktop to load up
   const images = await navigationBar.openImages();
   await waitWhile(async () => await images.pageIsEmpty(), {
@@ -103,13 +108,13 @@ test.describe.serial('Verification of pod creation workflow', { tag: '@smoke' },
     let images = await navigationBar.openImages();
     let pullImagePage = await images.openPullImage();
     images = await pullImagePage.pullImage(backendImage, imagesTag, 90_000);
-    const backendExists = await images.waitForImageExists(backendImage);
+    const backendExists = await images.waitForImageExists(backendImage, 20_000);
     playExpect(backendExists, `${backendImage} image is not present in the list of images`).toBeTruthy();
 
     await navigationBar.openImages();
     pullImagePage = await images.openPullImage();
     images = await pullImagePage.pullImage(frontendImage, imagesTag, 90_000);
-    const frontendExists = await images.waitForImageExists(frontendImage);
+    const frontendExists = await images.waitForImageExists(frontendImage, 20_000);
     playExpect(frontendExists, `${frontendImage} image is not present in the list of images`).toBeTruthy();
   });
 

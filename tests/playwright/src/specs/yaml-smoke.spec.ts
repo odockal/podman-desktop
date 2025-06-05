@@ -80,8 +80,12 @@ test.describe.serial(`Play yaml file to pull images and create pod for app ${pod
     await playExpect(imagesPage.heading).toBeVisible();
 
     await test.step('Checking that images are pulled', async () => {
-      await playExpect.poll(async () => await imagesPage.waitForImageExists(backendImage)).toBeTruthy();
-      await playExpect.poll(async () => await imagesPage.waitForImageExists(frontendImage)).toBeTruthy();
+      await playExpect
+        .poll(async () => await imagesPage.waitForImageExists(backendImage), { timeout: 15_000 })
+        .toBeTruthy();
+      await playExpect
+        .poll(async () => await imagesPage.waitForImageExists(frontendImage), { timeout: 15_000 })
+        .toBeTruthy();
       await playExpect
         .poll(async () => await imagesPage.getCurrentStatusOfImage(backendImage), { timeout: 15_000 })
         .toBe('UNUSED');

@@ -24,3 +24,4 @@ export const isWindows = os.platform() === 'win32';
 export const archType = os.arch();
 
 export const isCI = process.env.CI ? process.env.CI === 'true' : false;
+export const isGHActions = process.env.GITHUB_ACTIONS === 'true';

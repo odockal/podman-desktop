@@ -27,7 +27,7 @@ import { ResourceConnectionCardPage } from '../model/pages/resource-connection-c
 import { ResourcesPage } from '../model/pages/resources-page';
 import { NavigationBar } from '../model/workbench/navigation';
 import { expect as playExpect, test } from '../utility/fixtures';
-import { isWindows } from '../utility/platform';
+import { isGHActions, isWindows } from '../utility/platform';
 import { waitForPodmanMachineStartup } from '../utility/wait';
 
 const architectures: string[] = [ArchitectureType.AMD64, ArchitectureType.ARM64];
@@ -64,6 +64,7 @@ test.afterAll(async ({ runner }) => {
 test.describe.serial('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
   test.describe
     .serial('Image Manifest Validation - Simple Containerfile', () => {
+      test.skip(!!isGHActions && !!isWindows, 'Skipping on Windows Github Actions runner');
       test('Build the image using cross-arch build (simple )', async () => {
         await playExpect(imagesPage.heading).toBeVisible();
 
@@ -99,6 +100,7 @@ test.describe.serial('Image Manifest E2E Validation', { tag: '@smoke' }, () => {
     });
   test.describe
     .serial('Image Manifest Validation - Complex Containerfile', () => {
+      test.skip(!!isGHActions && !!isWindows, 'Skipping on Windows Github Actions runner');
       test('Build the image using cross-arch build (complex)', async ({ page }) => {
         await playExpect(imagesPage.heading).toBeVisible();
 

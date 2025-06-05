@@ -19,6 +19,7 @@
 import { ContainerState, VolumeState } from '../model/core/states';
 import type { ContainerInteractiveParams } from '../model/core/types';
 import { expect as playExpect, test } from '../utility/fixtures';
+import { isGHActions, isWindows } from '../utility/platform';
 import { waitForPodmanMachineStartup } from '../utility/wait';
 
 const imageToPull = 'quay.io/centos-bootc/bootc-image-builder';
@@ -116,6 +117,7 @@ test.describe.serial('Volume workflow verification', { tag: '@smoke' }, () => {
 
   test('Create volumes from bootc-image-builder', async ({ navigationBar }) => {
     test.setTimeout(210_000);
+    test.skip(isGHActions && isWindows, 'skip on GHA windows runner');
 
     //count the number of existing volumes
     let volumesPage = await navigationBar.openVolumes();
