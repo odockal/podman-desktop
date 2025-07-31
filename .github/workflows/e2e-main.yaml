@@ -175,10 +175,10 @@ jobs:
             !./tests/**/traces/raw
 
   win-update-e2e-test:
-    name: win update e2e tests - ${{ matrix.installation }}
+    name: ${{ matrix.os }} update e2e tests - ${{ matrix.installation }}
     runs-on: ${{ matrix.os }}
     # disable on forks as secrets are not available
-    # if: github.event.repository.fork == false
+    #if: github.event.repository.fork == false
     permissions:
       checks: write # required for mikepenz/action-junit-report
     env:
@@ -220,11 +220,8 @@ jobs:
           $parts = $originalVersion -split '\.'
           $x = [int]$parts[0]
           $y = [int]$parts[1]
-          $z = ([int]($parts[2] -split '-')[0])
-        
-          # Decrement minor version
           $newY = $y - 1
-          $newVersion = "$x.$newY.$z"
+          $newVersion = "$x.$newY.0"
           if ($newY -lt 0) {
             $newVersion = "1.20.0"
           }
@@ -232,8 +229,6 @@ jobs:
           Write-Host "Decremented: $newVersion"
           jq --arg version "$newVersion" '.version = $version' package.json | Out-File -FilePath package.json_tmp
           Move-Item -Path package.json_tmp -Destination package.json -Force
-          $newOriginalVersion = (jq -r '.version' package.json).Trim()
-          echo "New: $newOriginalVersion"
 
       - name: Build Podman Desktop locally with electron updater included
         env:
@@ -289,7 +284,7 @@ jobs:
     name: mac update e2e tests
     runs-on: macos-15
     # disable on forks as secrets are not available
-    if: github.event.repository.fork == false
+    #if: github.event.repository.fork == false
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 60
@@ -318,20 +313,32 @@ jobs:
 
       - name: Adjust/Downgrade local podman desktop version
         run: |
-          version="1.15.0"
-          jq --arg version "$version" '.version = $version' package.json > package.json_tmp
+          actualVersion=$(jq -r '.version' package.json)
+          xy=$(echo "$actualVersion" | cut -d'.' -f1-2)
+          IFS='.' read -r x y <<< "$xy"
+          newY=$((y - 1))
+          newVersion="${x}.${newY}.0"
+          if [ $newY -lt 0 ]; then
+            newVersion="1.20.0"
+          fi
+          echo "PD_VERSION=$newVersion" >> $GITHUB_ENV
+          jq --arg version "$newVersion" '.version = $version' package.json > package.json_tmp
           mv package.json_tmp package.json
 
-      - name: Build Podman Desktop locally with electron updater included
+      - name: Build Podman Desktop locally and allow prereleases on update
         env:
           ELECTRON_ENABLE_INSPECT: true
         run: |
+          echo "Allow Prerelease when updating, setting it inline in the code"
+          sed -i '' '/autoUpdater.autoDownload = false;/a \
+          autoUpdater.allowPrerelease = true; \
+          ' packages/main/src/plugin/updater.ts
           pnpm compile:current --mac dmg
           dmgPath=$(realpath $(find ./dist -name "*.dmg"))
           echo "DMG Path: $dmgPath"
           # extract the dmg
           hdiutil attach $dmgPath
-          pdVolumePath=$(find /Volumes -name *1.15.0*)
+          pdVolumePath=$(find /Volumes -name "*${{ env.PD_VERSION }}*")
           echo "PD Volume path: $pdVolumePath"
           sudo cp -R "$pdVolumePath/Podman Desktop.app" /Applications
           # codesign the extracted app
@@ -339,6 +346,7 @@ jobs:
           sudo codesign --force --deep --sign - "$appPath"
           codesign --verify --deep --verbose=2 "$appPath"
           binaryPath="$appPath/Contents/MacOS/Podman Desktop"
+          echo "PD_APP_PATH=$appPath" >> $GITHUB_ENV
           echo "PODMAN_DESKTOP_BINARY=$binaryPath" >> $GITHUB_ENV
 
       - name: Run E2E Update test
