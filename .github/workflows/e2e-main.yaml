@@ -312,7 +312,7 @@ jobs:
     name: mac update e2e tests
     runs-on: macos-15
     # disable on forks as secrets are not available
-    if: github.event.repository.fork == false
+    # if: github.event.repository.fork == false
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 60
