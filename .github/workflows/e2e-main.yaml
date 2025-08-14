@@ -196,7 +196,7 @@ jobs:
     name: ${{ matrix.os }} update e2e tests - ${{ matrix.installation }}
     runs-on: ${{ matrix.os }}
     # disable on forks as secrets are not available
-    # if: github.event.repository.fork == false
+    if: github.event.repository.fork == false
     permissions:
       checks: write # required for mikepenz/action-junit-report
     env:
@@ -270,7 +270,7 @@ jobs:
 
       - name: Manually set update target owner/repo ${{ env.UPDATE_TARGET_OWNER }}/${{ env.UPDATE_TARGET_REPO }}
         run: |
-          $updateFile = "env:PD_DIST_PATH/resources/app-update.yml"
+          $updateFile = "$env:PD_DIST_PATH/resources/app-update.yml"
           if (-Not (Test-Path $updateFile)) {
             Write-Error "app-update.yml not found at $updateFile"
           }
@@ -312,7 +312,7 @@ jobs:
     name: mac update e2e tests
     runs-on: macos-15
     # disable on forks as secrets are not available
-    # if: github.event.repository.fork == false
+    if: github.event.repository.fork == false
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 60
@@ -384,7 +384,7 @@ jobs:
       - name: Manually set update target owner/repo ${{ env.UPDATE_TARGET_OWNER }}/${{ env.UPDATE_TARGET_REPO }}
         run: |
           echo "Replace app-update.yml repo to a testing-prerelease"
-          sudo sed -i '' 's/owner: podman-desktop/owner: ${{ env.OWNER}}/' "$PD_APP_PATH/Contents/Resources/app-update.yml"
+          sudo sed -i '' 's/owner: podman-desktop/owner: ${{ env.UPDATE_TARGET_OWNER}}/' "$PD_APP_PATH/Contents/Resources/app-update.yml"
           sudo sed -i '' 's/repo: podman-desktop/repo: ${{ env.UPDATE_TARGET_REPO}}/' "$PD_APP_PATH/Contents/Resources/app-update.yml"
           echo "Show app-update.yml after replace..."
           cat "$PD_APP_PATH/Contents/Resources/app-update.yml"
