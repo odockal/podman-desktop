@@ -245,7 +245,7 @@ jobs:
       - name: Adjust/Downgrade local podman desktop version Windows
         run: node tests/playwright/scripts/version-util.cjs ./package.json --update
 
-      - name: Build Podman Desktop locally with electron updater included
+      - name: Build Podman Desktop locally, win nsis,  ${{ env.UPDATE_PRERELEASE == 'true' && 'Allow Prerelease' || 'Using Latest' }}
         env:
           ELECTRON_ENABLE_INSPECT: true
         run: |
@@ -254,6 +254,7 @@ jobs:
             if (-Not (Test-Path $updaterFile)) {
               Write-Error "Updater file not found at $updaterFile"
             } else {
+              Write-host "Allow Prerelease when updating, setting it inline in the code"
               (Get-Content $updaterFile).Replace('autoUpdater.autoDownload = false;', 'autoUpdater.autoDownload = false;autoUpdater.allowPrerelease=true;') | Set-Content $updaterFile -ErrorAction Stop
             }
           }
@@ -355,7 +356,7 @@ jobs:
           actualVersion=$(jq -r '.version' package.json)
           echo "PD_VERSION=$actualVersion" >> $GITHUB_ENV
 
-      - name: Build Podman Desktop locally with electron updater included
+      - name: Build Podman Desktop locally, mac dmg,  ${{ env.UPDATE_PRERELEASE == 'true' && 'Allow Prerelease' || 'Using Latest' }}
         env:
           ELECTRON_ENABLE_INSPECT: true
         run: |
