@@ -45,6 +45,9 @@ let resourceLabel: string | undefined;
 let ociImageUrl: string;
 
 let navigationBar: NavigationBar;
+const skipExtesnionsTest = process.env.SKIP_EXTENSIONS_TEST ?? false;
+
+test.skip(!!skipExtesnionsTest, 'Skip test suite based on env. variable');
 
 async function _startup(extensionLabel: string): Promise<void> {
   pdRunner = await RunnerFactory.getInstance();
