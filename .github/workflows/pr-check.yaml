@@ -336,9 +336,6 @@ jobs:
             /bin/time -f '%E %C' sudo apt-get update -o Dir::Etc::sourcelist="sources.list.d/resolute.list" \
             #                         -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0"
             # echo 'libc6 libraries/restart-without-asking boolean true' | sudo debconf-set-selections
-            /bin/time -f '%E %C' sudo apt install -y --allow-downgrades criu/resolute crun/resolute podman/resolute skopeo/resolute
-            IDV=$(. /usr/lib/os-release && echo ${ID}-${VERSION_ID})
-            test "${IDV}" = "ubuntu-24.04"
             # Add new update repo resolute: 
             # sudo tee -a /etc/apt/sources.list.d/resolute.sources <<EOF
             # Types: deb
@@ -348,15 +345,18 @@ jobs:
             # Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg  
             # EOF
             # # Disable auto upgrade for this resolute
-            # sudo tee /etc/apt/preferences.d/resolute <<EOF
-            # Package: *
-            # Pin: release n=resolute
-            # Pin-Priority: 50
+            sudo tee /etc/apt/preferences.d/resolute <<EOF
+            Package: *
+            Pin: release n=resolute
+            Pin-Priority: 50
             
-            # Package: podman criu crun skopeo buildah
-            # Pin: release n=resolute
-            # Pin-Priority: 500
-            # EOF
+            Package: podman criu crun skopeo buildah
+            Pin: release n=resolute
+            Pin-Priority: 500
+            EOF
+            /bin/time -f '%E %C' sudo apt install -y --allow-downgrades criu/resolute crun/resolute podman/resolute skopeo/resolute
+            IDV=$(. /usr/lib/os-release && echo ${ID}-${VERSION_ID})
+            test "${IDV}" = "ubuntu-24.04"
             # sudo apt update # update system
             # apt policy podman # list available podman versions
             # sudo apt-get install -y -t resolute podman criu crun skopeo
