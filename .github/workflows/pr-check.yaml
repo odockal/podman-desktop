@@ -332,8 +332,8 @@ jobs:
             # Require the runner is ubuntu-24.04
             IDV=$(. /usr/lib/os-release && echo ${ID}-${VERSION_ID})
             test "${IDV}" = "ubuntu-24.04"
-            echo 'deb http://azure.archive.ubuntu.com/ubuntu resolute universe main' | sudo tee /etc/apt/sources.list.d/resolute.list
-            /bin/time -f '%E %C' sudo apt-get update -o Dir::Etc::sourcelist="sources.list.d/resolute.list" \
+            echo 'deb http://azure.archive.ubuntu.com/ubuntu questing universe main' | sudo tee /etc/apt/sources.list.d/questing.list
+            /bin/time -f '%E %C' sudo apt-get update -o Dir::Etc::sourcelist="sources.list.d/questing.list" \
             #                         -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0"
             # echo 'libc6 libraries/restart-without-asking boolean true' | sudo debconf-set-selections
             # Add new update repo resolute: 
@@ -345,16 +345,16 @@ jobs:
             # Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg  
             # EOF
             # # Disable auto upgrade for this resolute
-            sudo tee /etc/apt/preferences.d/resolute <<EOF
+            sudo tee /etc/apt/preferences.d/questing <<EOF
             Package: *
-            Pin: release n=resolute
+            Pin: release n=questing
             Pin-Priority: 50
             
             Package: podman criu crun skopeo buildah
-            Pin: release n=resolute
+            Pin: release n=questing
             Pin-Priority: 500
             EOF
-            /bin/time -f '%E %C' sudo apt install -y --allow-downgrades criu/resolute crun/resolute podman/resolute skopeo/resolute
+            /bin/time -f '%E %C' sudo apt install -y --allow-downgrades criu/questing crun/questing podman/questing skopeo/questing
             IDV=$(. /usr/lib/os-release && echo ${ID}-${VERSION_ID})
             test "${IDV}" = "ubuntu-24.04"
             # sudo apt update # update system
