@@ -319,38 +319,11 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      # - name: Install Podman v5 using external action
-      #   # Use the action from the other repository
-      #   uses: redhat-actions/podman-install@15cb93f5a6b78a758fd8f4d1cecbf6651d4bcea3
-      #   with:
-      #     github-token: ${{ secrets.GITHUB_TOKEN }}
-          
-      - name: update podman 26
-        shell: bash
-        run: |
-          ubuntu_repo='questing'
-          echo "INFO: Using '${ubuntu_repo}' Ubuntu repository for podman installation."
-          set -eux
-          # Require the runner is ubuntu-24.04
-          IDV=$(. /usr/lib/os-release && echo ${ID}-${VERSION_ID})
-          test "${IDV}" = "ubuntu-24.04"
-          echo "deb http://azure.archive.ubuntu.com/ubuntu ${ubuntu_repo} universe main" | sudo tee /etc/apt/sources.list.d/${ubuntu_repo}.list
-          /bin/time -f '%E %C' sudo apt-get update -o Dir::Etc::sourcelist="sources.list.d/${ubuntu_repo}.list" \
-            -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0"
-          # Disable auto upgrade for this repository
-          sudo tee /etc/apt/preferences.d/${ubuntu_repo} <<EOF
-          Package: *
-          Pin: release n=${ubuntu_repo}
-          Pin-Priority: 50
-          
-          Package: podman criu crun skopeo buildah
-          Pin: release n=${ubuntu_repo}
-          Pin-Priority: 500
-          EOF
-          /bin/time -f '%E %C' sudo apt install -y --allow-downgrades criu/${ubuntu_repo} crun/${ubuntu_repo} podman/${ubuntu_repo} skopeo/${ubuntu_repo}
-          IDV=$(. /usr/lib/os-release && echo ${ID}-${VERSION_ID})
-          echo "Actual ubuntu version: ${IDV}"
-          echo "Actual podman installed: $(podman -v)"
+      - name: Install Podman v5 using external action
+        # Use the action from the other repository
+        uses: redhat-actions/podman-install@issue-8
+        with:
+          ubuntu-repository: questing
 
       - name: Setup testenv using external action
         uses: podman-desktop/e2e/.github/actions/pde2e-testenv-prepare@13e2c57c759137bfc1f437f221967461e8a98e2a
