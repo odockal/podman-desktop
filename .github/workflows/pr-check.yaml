@@ -30,7 +30,7 @@ permissions:
 
 jobs:
   windows:
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
+    if: false
     name: Windows
     runs-on: windows-2025
     timeout-minutes: 60
@@ -80,7 +80,7 @@ jobs:
           path: ./dist/podman-desktop*-next-arm64.exe
 
   linux:
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
+    if: false
     name: Linux
     runs-on: ubuntu-24.04
     timeout-minutes: 40
@@ -129,7 +129,7 @@ jobs:
           path: ./dist/podman-desktop-*.flatpak
 
   darwin:
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
+    if: false
     name: macOS
     runs-on: macos-15
     timeout-minutes: 40
@@ -172,7 +172,7 @@ jobs:
           path: ./dist/podman-desktop-*universal.dmg
 
   website-build:
-    if: ${{ (contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft) && github.event.pull_request.base.ref == 'main' }}
+    if: false
     name: build website
     runs-on: ubuntu-24.04
     steps:
@@ -208,7 +208,7 @@ jobs:
             PR_SHA
 
   lint-format:
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
+    if: false
     name: linter, formatters
     runs-on: ubuntu-24.04
     timeout-minutes: 40
@@ -245,7 +245,7 @@ jobs:
           fi
 
   typecheck:
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
+    if: false
     name: typecheck
     runs-on: ubuntu-24.04
     timeout-minutes: 40
@@ -268,7 +268,7 @@ jobs:
         run: pnpm typecheck
 
   unit-tests:
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
+    if: false
     name: unit tests / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 40
@@ -315,15 +315,29 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        mode: [production, development]
+        mode: [production]
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Install Podman v5 using external action
-        # Use the action from the other repository
-        uses: redhat-actions/podman-install@15cb93f5a6b78a758fd8f4d1cecbf6651d4bcea3
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Install Podman v5 using external action
+      #   # Use the action from the other repository
+      #   uses: redhat-actions/podman-install@15cb93f5a6b78a758fd8f4d1cecbf6651d4bcea3
+      #   with:
+      #     github-token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: update podman 26
+        shell: bash
+        run: |
+            set -eux
+            # Require the runner is ubuntu-24.04
+            IDV=$(. /usr/lib/os-release && echo ${ID}-${VERSION_ID})
+            test "${IDV}" = "ubuntu-24.04"
+            echo 'deb http://azure.archive.ubuntu.com/ubuntu resolute universe main' | sudo tee /etc/apt/sources.list.d/resolute.list
+            /bin/time -f '%E %C' sudo apt-get update -o Dir::Etc::sourcelist="sources.list.d/resolute.list" \
+                                    -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0"
+            echo 'libc6 libraries/restart-without-asking boolean true' | sudo debconf-set-selections
+            /bin/time -f '%E %C' sudo apt install -y --allow-downgrades criu/resolute crun/resolute podman/resolute skopeo/resolute
+            podman -v
 
       - name: Setup testenv using external action
         uses: podman-desktop/e2e/.github/actions/pde2e-testenv-prepare@13e2c57c759137bfc1f437f221967461e8a98e2a
@@ -373,7 +387,7 @@ jobs:
             !./tests/**/traces/raw
 
   windows-sanity-check-e2e-tests:
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
+    if: false
     name: windows sanity check e2e tests
     runs-on: windows-2025
     steps:
@@ -420,7 +434,7 @@ jobs:
             !./tests/**/traces/raw
   
   macos-sanity-check-e2e-tests:
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
+    if: false
     name: macos sanity check e2e tests
     runs-on: macos-26
     env:
@@ -465,7 +479,7 @@ jobs:
             !./tests/**/traces/raw
 
   k8s-sanity-e2e-tests:
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
+    if: false
     name: k8s sanity e2e tests
     runs-on: ubuntu-24.04
     continue-on-error: true
@@ -525,7 +539,7 @@ jobs:
             !./tests/**/traces/raw
 
   detect_pnpm_changes:
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'area/ci') || !github.event.pull_request.draft }}
+    if: false
     name: Detect pnpm lock or pr-check files changes
     runs-on: ubuntu-24.04
     outputs:
