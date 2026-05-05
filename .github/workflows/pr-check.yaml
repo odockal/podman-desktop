@@ -334,11 +334,11 @@ jobs:
           # Require the runner is ubuntu-24.04
           IDV=$(. /usr/lib/os-release && echo ${ID}-${VERSION_ID})
           test "${IDV}" = "ubuntu-24.04"
-          echo 'deb http://azure.archive.ubuntu.com/ubuntu "${ubuntu_repo}" universe main' | sudo tee "/etc/apt/sources.list.d/${ubuntu_repo}.list"
+          echo "deb http://azure.archive.ubuntu.com/ubuntu ${ubuntu_repo} universe main" | sudo tee /etc/apt/sources.list.d/${ubuntu_repo}.list
           /bin/time -f '%E %C' sudo apt-get update -o Dir::Etc::sourcelist="sources.list.d/${ubuntu_repo}.list" \
             -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0"
           # Disable auto upgrade for this repository
-          sudo tee "/etc/apt/preferences.d/${ubuntu_repo}" <<EOF
+          sudo tee /etc/apt/preferences.d/${ubuntu_repo} <<EOF
           Package: *
           Pin: release n=${ubuntu_repo}
           Pin-Priority: 50
@@ -347,7 +347,7 @@ jobs:
           Pin: release n=${ubuntu_repo}
           Pin-Priority: 500
           EOF
-          /bin/time -f '%E %C' sudo apt install -y --allow-downgrades "criu/${ubuntu_repo} crun/${ubuntu_repo} podman/${ubuntu_repo} skopeo/${ubuntu_repo}"
+          /bin/time -f '%E %C' sudo apt install -y --allow-downgrades criu/${ubuntu_repo} crun/${ubuntu_repo} podman/${ubuntu_repo} skopeo/${ubuntu_repo}
           IDV=$(. /usr/lib/os-release && echo ${ID}-${VERSION_ID})
           echo "Actual ubuntu version: ${IDV}"
           echo "Actual podman installed: $(podman -v)"
