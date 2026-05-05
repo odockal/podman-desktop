@@ -328,39 +328,29 @@ jobs:
       - name: update podman 26
         shell: bash
         run: |
-            set -eux
-            # Require the runner is ubuntu-24.04
-            IDV=$(. /usr/lib/os-release && echo ${ID}-${VERSION_ID})
-            test "${IDV}" = "ubuntu-24.04"
-            echo 'deb http://azure.archive.ubuntu.com/ubuntu questing universe main' | sudo tee /etc/apt/sources.list.d/questing.list
-            /bin/time -f '%E %C' sudo apt-get update -o Dir::Etc::sourcelist="sources.list.d/questing.list" \
-            #                         -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0"
-            # echo 'libc6 libraries/restart-without-asking boolean true' | sudo debconf-set-selections
-            # Add new update repo resolute: 
-            # sudo tee -a /etc/apt/sources.list.d/resolute.sources <<EOF
-            # Types: deb
-            # URIs: http://archive.ubuntu.com/ubuntu/
-            # Suites: resolute
-            # Components: main restricted universe multiverse
-            # Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg  
-            # EOF
-            # # Disable auto upgrade for this resolute
-            sudo tee /etc/apt/preferences.d/questing <<EOF
-            Package: *
-            Pin: release n=questing
-            Pin-Priority: 50
-            
-            Package: podman criu crun skopeo buildah
-            Pin: release n=questing
-            Pin-Priority: 500
-            EOF
-            /bin/time -f '%E %C' sudo apt install -y --allow-downgrades criu/questing crun/questing podman/questing skopeo/questing
-            IDV=$(. /usr/lib/os-release && echo ${ID}-${VERSION_ID})
-            test "${IDV}" = "ubuntu-24.04"
-            # sudo apt update # update system
-            # apt policy podman # list available podman versions
-            # sudo apt-get install -y -t resolute podman criu crun skopeo
-            # podman -v
+          ubuntu_repo='questing'
+          echo "INFO: Using '${ubuntu_repo}' Ubuntu repository for podman installation."
+          set -eux
+          # Require the runner is ubuntu-24.04
+          IDV=$(. /usr/lib/os-release && echo ${ID}-${VERSION_ID})
+          test "${IDV}" = "ubuntu-24.04"
+          echo 'deb http://azure.archive.ubuntu.com/ubuntu ${ubuntu_repo} universe main' | sudo tee "/etc/apt/sources.list.d/${ubuntu_repo}.list"
+          /bin/time -f '%E %C' sudo apt-get update -o Dir::Etc::sourcelist="sources.list.d/${ubuntu_repo}.list" \
+            -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0"
+          # Disable auto upgrade for this repository
+          sudo tee /etc/apt/preferences.d/${ubuntu_repo} <<EOF
+          Package: *
+          Pin: release n=${ubuntu_repo}
+          Pin-Priority: 50
+          
+          Package: podman criu crun skopeo buildah
+          Pin: release n=${ubuntu_repo}
+          Pin-Priority: 500
+          EOF
+          /bin/time -f '%E %C' sudo apt install -y --allow-downgrades criu/${ubuntu_repo} crun/${ubuntu_repo} podman/${ubuntu_repo} skopeo/${ubuntu_repo}
+          IDV=$(. /usr/lib/os-release && echo ${ID}-${VERSION_ID})
+          echo "Actual ubuntu version: ${IDV}"
+          echo "Actual podman installed: $(podman -v)"
 
       - name: Setup testenv using external action
         uses: podman-desktop/e2e/.github/actions/pde2e-testenv-prepare@13e2c57c759137bfc1f437f221967461e8a98e2a
