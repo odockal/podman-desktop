@@ -332,11 +332,28 @@ jobs:
             # Require the runner is ubuntu-24.04
             IDV=$(. /usr/lib/os-release && echo ${ID}-${VERSION_ID})
             test "${IDV}" = "ubuntu-24.04"
-            echo 'deb http://azure.archive.ubuntu.com/ubuntu resolute universe main' | sudo tee /etc/apt/sources.list.d/resolute.list
-            /bin/time -f '%E %C' sudo apt-get update -o Dir::Etc::sourcelist="sources.list.d/resolute.list" \
-                                    -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0"
-            echo 'libc6 libraries/restart-without-asking boolean true' | sudo debconf-set-selections
-            /bin/time -f '%E %C' sudo apt install -y --allow-downgrades criu/resolute crun/resolute podman/resolute skopeo/resolute
+            # echo 'deb http://azure.archive.ubuntu.com/ubuntu resolute universe main' | sudo tee /etc/apt/sources.list.d/resolute.list
+            # /bin/time -f '%E %C' sudo apt-get update -o Dir::Etc::sourcelist="sources.list.d/resolute.list" \
+            #                         -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0"
+            # echo 'libc6 libraries/restart-without-asking boolean true' | sudo debconf-set-selections
+            # /bin/time -f '%E %C' sudo apt install -y --allow-downgrades criu/resolute crun/resolute podman/resolute skopeo/resolute
+            # Add new update repo resolute: 
+            sudo tee -a /etc/apt/sources.list.d/resolute.sources <<EOF
+            Types: deb
+            URIs: http://archive.ubuntu.com/ubuntu/
+            Suites: resolute
+            Components: main restricted universe multiverse
+            Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg  
+            EOF
+            # Disable auto upgrade for this resolute
+            sudo tee -a /etc/apt/preferences.d/99resolute-pin <<EOF
+            Package: *
+            Pin: release n=resolute
+            Pin-Priority: 100 
+            EOF
+            sudo apt update # update system
+            apt policy podman # list available podman versions
+            sudo apt install podman -t resolute -y 
             podman -v
 
       - name: Setup testenv using external action
