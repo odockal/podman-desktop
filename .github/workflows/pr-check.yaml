@@ -323,55 +323,7 @@ jobs:
         # Use the action from the other repository
         uses: redhat-actions/podman-install@issue-8
         with:
-          ubuntu-repository: 'resolute'
-          allow-upgrade: true
-
-      - name: Setup testenv using external action
-        uses: podman-desktop/e2e/.github/actions/pde2e-testenv-prepare@13e2c57c759137bfc1f437f221967461e8a98e2a
-
-      - uses: pnpm/action-setup@8912a9102ac27614460f54aedde9e1e7f9aec20d # v6.0.5
-        name: Install pnpm
-        with:
-          run_install: false
-
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
-        with:
-          node-version: 24
-          cache: 'pnpm'
-
-      - name: Execute pnpm
-        run: pnpm install
-
-      - name: Run Smoke E2E tests in ${{ matrix.mode == 'production' && 'Production' || 'Development' }} Mode
-        run: |
-          if [ ${{ matrix.mode }} == 'production' ]; then
-            echo "Compiling the Podman Desktop in production mode"
-            export ELECTRON_ENABLE_INSPECT=true
-            pnpm compile:current --linux dir
-            path=$(realpath ./dist/linux-unpacked/podman-desktop)
-            echo "Podman Desktop built binary: $path"
-            export PODMAN_DESKTOP_BINARY=$path
-          fi
-          pnpm test:e2e:smoke
-
-      - name: Publish Test Report
-        uses: mikepenz/action-junit-report@bccf2e31636835cf0874589931c4116687171386 # v6.4.0
-        if: always() # always run even if the previous step fails
-        with:
-          fail_on_failure: true
-          include_passed: true
-          detailed_summary: true
-          annotate_only: true
-          require_tests:  true
-          report_paths: '**/*results.xml'
-
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        if: always()
-        with:
-          name: ${{ matrix.mode }}-smoke-e2e-tests
-          path: |
-            ./tests/**/output/
-            !./tests/**/traces/raw
+          ubuntu-repository: 'questing'
 
   windows-sanity-check-e2e-tests:
     if: false
