@@ -20,7 +20,7 @@ import test, { expect as playExpect, type Locator, type Page } from '@playwright
 
 import { ResourceElementActions } from '/@/model/core/operations';
 import { PodmanMachinePrivileges } from '/@/model/core/types';
-import { handleConfirmationDialog } from '/@/utility/operations';
+import { handleConfirmationDialog, isVersion10x } from '/@/utility/operations';
 
 import { ResourceCardPage } from './resource-card-page';
 
@@ -64,7 +64,11 @@ export class ResourceConnectionCardPage extends ResourceCardPage {
 
       // A confirmation dialog is displayed for deletion
       if (String(operation) === ResourceElementActions.Delete) {
-        await handleConfirmationDialog(this.page);
+        if (await isVersion10x(this.page)) {
+          console.log('Skip delete dialog handling');
+        } else {
+          await handleConfirmationDialog(this.page);
+        }
       }
     });
   }

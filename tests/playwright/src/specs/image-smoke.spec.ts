@@ -25,7 +25,7 @@ import { ArchitectureType } from '/@/model/core/platforms';
 import { ImageState } from '/@/model/core/states';
 import { ImageDetailsPage } from '/@/model/pages/image-details-page';
 import { expect as playExpect, test } from '/@/utility/fixtures';
-import { ensureNoImagesPresentCLI, untagImagesFromPodman } from '/@/utility/operations';
+import { ensureNoImagesPresentCLI, isVersion10x, untagImagesFromPodman } from '/@/utility/operations';
 import { waitForPodmanMachineStartup } from '/@/utility/wait';
 
 const helloContainer = 'ghcr.io/podmandesktop-ci/hello';
@@ -92,7 +92,8 @@ test.describe
         .toBeTruthy();
     });
 
-    test('Cancel pull image', async ({ navigationBar }) => {
+    test('Cancel pull image', async ({ navigationBar, page }) => {
+      test.skip(await isVersion10x(page), 'Cancel button not yet added in this version...');
       const imagesPage = await navigationBar.openImages();
       await playExpect(imagesPage.heading).toBeVisible();
 
@@ -103,7 +104,8 @@ test.describe
       await playExpect(pullImagePage.heading).toBeVisible();
     });
 
-    test('Pull image and view details', async ({ navigationBar }) => {
+    test('Pull image and view details', async ({ navigationBar, page }) => {
+      test.skip(await isVersion10x(page), 'Cancel button not yet added in this version...');
       const imagesPage = await navigationBar.openImages();
       await playExpect(imagesPage.heading).toBeVisible();
 

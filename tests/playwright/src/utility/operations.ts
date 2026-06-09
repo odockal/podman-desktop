@@ -35,8 +35,22 @@ import { ResourcesPage } from '/@/model/pages/resources-page';
 import { SettingsBar } from '/@/model/pages/settings-bar';
 import { VolumeDetailsPage } from '/@/model/pages/volume-details-page';
 import { NavigationBar } from '/@/model/workbench/navigation';
+import { StatusBar } from '/@/model/workbench/status-bar';
 import { isLinux, isMac, isWindows } from '/@/utility/platform';
 import { waitUntil, waitWhile } from '/@/utility/wait';
+
+export async function isVersion10x(page: Page): Promise<boolean> {
+  const version = new StatusBar(page).versionButton;
+  try {
+    await playExpect(version).toBeVisible();
+  } catch (err) {
+    console.log('Version button missing => 1.0');
+    return true;
+  }
+  const versionText = await version.innerText();
+  console.log(`Version is: ${versionText}`);
+  return versionText.indexOf('1.0') >= 0 ? true : false;
+}
 
 /**
  * Stop and delete container defined by its name

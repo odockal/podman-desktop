@@ -18,6 +18,8 @@
 import type { Locator, Page } from '@playwright/test';
 import test, { expect as playExpect } from '@playwright/test';
 
+import { isVersion10x } from '/@/utility/operations';
+
 import { BasePage } from './base-page';
 import { ImageDetailsPage } from './image-details-page';
 import { ImagesPage } from './images-page';
@@ -65,8 +67,13 @@ export class PullImagePage extends BasePage {
   async pullImage(imageName: string, tag = '', timeout = 60_000): Promise<ImagesPage> {
     return test.step(`Pulling image ${imageName}:${tag}`, async () => {
       await this.startPull(imageName, tag);
-      await playExpect(this.closeButton).toBeEnabled({ timeout: timeout });
-      await this.closeButton.click();
+      let closeMe = this.closeButton;
+      if (await isVersion10x(this.page)) {
+        const doneButton = this.tabContent.getByRole('button', { name: 'Done' });
+        closeMe = doneButton;
+      }
+      await playExpect(closeMe).toBeEnabled({ timeout: timeout });
+      await closeMe.click();
       return new ImagesPage(this.page);
     });
   }
@@ -180,8 +187,15 @@ export class PullImagePage extends BasePage {
   async pullImageFromSearchResults(pattern: string, timeout = 60_000): Promise<ImagesPage> {
     return test.step(`Pull image from search results: ${pattern}`, async () => {
       await this.startPullFromSearchResults(pattern);
-      await playExpect(this.closeButton).toBeEnabled({ timeout: timeout });
-      await this.closeButton.click();
+      const doneButton = this.tabContent.getByRole('button', { name: 'Done' });
+      let closeMe = doneButton;
+      try {
+        await playExpect(doneButton).toBeEnabled({ timeout: timeout });
+      } catch (err) {
+        await playExpect(this.closeButton).toBeEnabled({ timeout: timeout });
+        closeMe = this.closeButton;
+      }
+      await closeMe.click();
       return new ImagesPage(this.page);
     });
   }
