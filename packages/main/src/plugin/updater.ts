@@ -478,7 +478,12 @@ export class Updater {
       autoUpdater.setFeedURL({
         provider: 'generic',
         url: product.update.url,
+        ...(product.update.channel ? { channel: product.update.channel } : {}),
       });
+    }
+
+    if (product.update?.channel) {
+      autoUpdater.channel = product.update.channel;
     }
 
     /**

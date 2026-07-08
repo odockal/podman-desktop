@@ -292,6 +292,7 @@ const config = {
     ? {
         provider: 'generic',
         url: product.update.url,
+        ...(product.update.channel ? { channel: product.update.channel } : {}),
         timeout: 10000,
       }
     : {
@@ -309,6 +310,7 @@ if (process.env.AIRGAP_DOWNLOAD) {
     publishAutoUpdate: false,
     provider: product.update?.url ? 'generic' : 'github',
     ...(product.update?.url ? { url: product.update.url } : {}),
+    ...(product.update.channel ? { channel: product.update.channel } : {}),
   };
 }
 

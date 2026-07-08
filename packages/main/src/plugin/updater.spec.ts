@@ -171,6 +171,7 @@ beforeEach(() => {
 
   vi.mocked(product).update = {
     url: '',
+    channel: '',
   };
 
   vi.mocked(commandRegistryMock.executeCommand).mockResolvedValue(undefined);
@@ -251,7 +252,7 @@ test('expect configuration description to use product name', () => {
 });
 
 test('expect setFeedURL not to be called when product.update.url is empty', () => {
-  vi.mocked(product).update = { url: '' };
+  vi.mocked(product).update = { url: '', channel: '' };
 
   new Updater(
     messageBoxMock,
@@ -266,7 +267,7 @@ test('expect setFeedURL not to be called when product.update.url is empty', () =
 });
 
 test('expect setFeedURL to be called with generic provider when product.update.url is set', () => {
-  vi.mocked(product).update = { url: 'https://updates.example.com/releases' };
+  vi.mocked(product).update = { url: 'https://updates.example.com/releases', channel: '' };
 
   new Updater(
     messageBoxMock,
@@ -284,7 +285,7 @@ test('expect setFeedURL to be called with generic provider when product.update.u
 });
 
 test('expect setFeedURL to be called before checkForUpdates', () => {
-  vi.mocked(product).update = { url: 'https://updates.example.com/releases' };
+  vi.mocked(product).update = { url: 'https://updates.example.com/releases', channel: '' };
 
   const callOrder: string[] = [];
   vi.mocked(autoUpdater.setFeedURL).mockImplementation(() => {
@@ -306,6 +307,74 @@ test('expect setFeedURL to be called before checkForUpdates', () => {
   ).init();
 
   expect(callOrder).toStrictEqual(['setFeedURL', 'checkForUpdates']);
+});
+
+test('expect autoUpdater.channel not to be set when product.update.channel is empty', () => {
+  vi.mocked(product).update = { url: '', channel: '' };
+
+  new Updater(
+    messageBoxMock,
+    configurationRegistryMock,
+    statusBarRegistryMock,
+    commandRegistryMock,
+    taskManagerMock,
+    apiSenderMock,
+  ).init();
+
+  expect(autoUpdater.channel).not.toBe('beta');
+});
+
+test('expect autoUpdater.channel to be set when product.update.channel is configured', () => {
+  vi.mocked(product).update = { url: '', channel: 'beta' };
+
+  new Updater(
+    messageBoxMock,
+    configurationRegistryMock,
+    statusBarRegistryMock,
+    commandRegistryMock,
+    taskManagerMock,
+    apiSenderMock,
+  ).init();
+
+  expect(autoUpdater.channel).toBe('beta');
+});
+
+test('expect setFeedURL to include channel when both url and channel are set', () => {
+  vi.mocked(product).update = { url: 'https://updates.example.com/releases', channel: 'beta' };
+
+  new Updater(
+    messageBoxMock,
+    configurationRegistryMock,
+    statusBarRegistryMock,
+    commandRegistryMock,
+    taskManagerMock,
+    apiSenderMock,
+  ).init();
+
+  expect(autoUpdater.setFeedURL).toHaveBeenCalledWith({
+    provider: 'generic',
+    url: 'https://updates.example.com/releases',
+    channel: 'beta',
+  });
+  expect(autoUpdater.channel).toBe('beta');
+});
+
+test('expect setFeedURL not to include channel when url is set but channel is empty', () => {
+  vi.mocked(product).update = { url: 'https://updates.example.com/releases', channel: '' };
+
+  new Updater(
+    messageBoxMock,
+    configurationRegistryMock,
+    statusBarRegistryMock,
+    commandRegistryMock,
+    taskManagerMock,
+    apiSenderMock,
+  ).init();
+
+  expect(autoUpdater.setFeedURL).toHaveBeenCalledWith({
+    provider: 'generic',
+    url: 'https://updates.example.com/releases',
+  });
 });
 
 describe('differential download', () => {

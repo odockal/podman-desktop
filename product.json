@@ -78,7 +78,8 @@
     ]
   },
   "update": {
-    "url": ""
+    "url": "",
+    "channel": ""
   },
   "releaseNotes": {
     "url": "",
