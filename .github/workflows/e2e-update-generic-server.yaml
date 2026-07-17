@@ -149,15 +149,28 @@ jobs:
         run: |
           $assetPath = (Resolve-Path "update-release-assets").Path
           $port = 8080
-          # Bind explicitly to 127.0.0.1 so Electron's Chromium network stack reaches it.
-          # On Windows, "localhost" may resolve to ::1 (IPv6) while Python listens on IPv4 only,
-          # causing ERR_CONNECTION_REFUSED inside the Electron app.
+          # Always bind to 127.0.0.1 (never "localhost") so Electron's Chromium network stack
+          # reaches the server. On Windows, "localhost" may resolve to ::1 (IPv6) while Python
+          # listens on IPv4 only, causing ERR_CONNECTION_REFUSED inside the Electron app.
           Start-Process -FilePath python `
             -ArgumentList "-m", "http.server", "$port", "--bind", "127.0.0.1", "--directory", "$assetPath" `
             -NoNewWindow
           # Give the server a moment to bind
           Start-Sleep -Seconds 3
           echo "UPDATE_SERVER_URL=http://127.0.0.1:$port" >> $env:GITHUB_ENV
+          # List all served files and verify required assets are present
+          Write-Host "=== Files served by update server ==="
+          Get-ChildItem $assetPath | Select-Object Name, Length | Format-Table -AutoSize
+          $files = Get-ChildItem $assetPath
+          if (-not ($files | Where-Object { $_.Name -eq "latest.yml" })) {
+            Write-Error "Missing required file: latest.yml"
+            exit 1
+          }
+          if (-not ($files | Where-Object { $_.Extension -eq ".exe" })) {
+            Write-Error "Missing required installer file (*.exe)"
+            exit 1
+          }
+          Write-Host "Asset check passed: latest.yml and installer present"
           # Smoke-check that the server is serving latest.yml
           $resp = Invoke-WebRequest "http://127.0.0.1:$port/latest.yml" -UseBasicParsing
           Write-Host "HTTP server response: $($resp.StatusCode)"
@@ -188,6 +201,25 @@ jobs:
           Set-Content -Path $updateFile -Value $content -ErrorAction Stop
           Write-Host "app-update.yml after update:"
           Get-Content $updateFile
+
+      - name: Verify update server is reachable
+        run: |
+          Write-Host "=== Python server process ==="
+          Get-Process python -ErrorAction SilentlyContinue | Select-Object Id, CPU, Responding | Format-Table
+          Write-Host "=== Listening on port 8080 ==="
+          netstat -an | findstr ":8080"
+          Write-Host "=== Windows excluded TCP port ranges ==="
+          netsh int ipv4 show excludedportrange protocol=tcp
+          Write-Host "=== Node.js connectivity test (same runtime as Electron main) ==="
+          node -e "
+            const http = require('http');
+            http.get('http://127.0.0.1:8080/latest.yml', (r) => {
+              console.log('Node.js OK — HTTP status:', r.statusCode);
+            }).on('error', (e) => {
+              console.error('Node.js FAIL:', e.message);
+              process.exit(1);
+            });
+          "
 
       - name: Run E2E Update tests
         run: |
@@ -376,14 +408,28 @@ jobs:
         run: |
           ASSET_PATH="$(pwd)/update-release-assets"
           PORT=8080
-          python3 -m http.server "$PORT" --directory "$ASSET_PATH" &
+          # Always bind to 127.0.0.1 (never "localhost") for consistent behaviour
+          # across platforms and to avoid IPv6 resolution surprises.
+          python3 -m http.server "$PORT" --bind 127.0.0.1 --directory "$ASSET_PATH" &
           SERVER_PID=$!
           echo "UPDATE_SERVER_PID=$SERVER_PID" >> $GITHUB_ENV
-          echo "UPDATE_SERVER_URL=http://localhost:$PORT" >> $GITHUB_ENV
+          echo "UPDATE_SERVER_URL=http://127.0.0.1:$PORT" >> $GITHUB_ENV
           # Give the server a moment to bind
           sleep 3
+          # List all served files and verify required assets are present
+          echo "=== Files served by update server ==="
+          ls -lh "$ASSET_PATH"
+          if [ ! -f "$ASSET_PATH/latest-mac.yml" ]; then
+            echo "ERROR: Missing required file: latest-mac.yml" >&2
+            exit 1
+          fi
+          if ! ls "$ASSET_PATH"/*.zip 2>/dev/null | grep -q .; then
+            echo "ERROR: Missing required installer file (*.zip)" >&2
+            exit 1
+          fi
+          echo "Asset check passed: latest-mac.yml and installer present"
           # Smoke-check that the server is up and serving latest-mac.yml
-          curl -fs "http://localhost:$PORT/latest-mac.yml" | head -3
+          curl -fs "http://127.0.0.1:$PORT/latest-mac.yml" | head -3
 
       - name: Adjust/Downgrade local podman desktop version
         run: |
