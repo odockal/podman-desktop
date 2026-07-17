@@ -49,13 +49,6 @@ on:
         type: string
         default: ''
         required: false
-      update_with_extensions:
-        description: 'Install extensions before triggering the update'
-        type: choice
-        options:
-          - 'false'
-          - 'true'
-        required: false
 
 jobs:
   # ─── Windows ──────────────────────────────────────────────────────────────
@@ -156,14 +149,17 @@ jobs:
         run: |
           $assetPath = (Resolve-Path "update-release-assets").Path
           $port = 8080
+          # Bind explicitly to 127.0.0.1 so Electron's Chromium network stack reaches it.
+          # On Windows, "localhost" may resolve to ::1 (IPv6) while Python listens on IPv4 only,
+          # causing ERR_CONNECTION_REFUSED inside the Electron app.
           Start-Process -FilePath python `
-            -ArgumentList "-m", "http.server", "$port", "--directory", "$assetPath" `
+            -ArgumentList "-m", "http.server", "$port", "--bind", "127.0.0.1", "--directory", "$assetPath" `
             -NoNewWindow
           # Give the server a moment to bind
           Start-Sleep -Seconds 3
-          echo "UPDATE_SERVER_URL=http://localhost:$port" >> $env:GITHUB_ENV
+          echo "UPDATE_SERVER_URL=http://127.0.0.1:$port" >> $env:GITHUB_ENV
           # Smoke-check that the server is serving latest.yml
-          $resp = Invoke-WebRequest "http://localhost:$port/latest.yml" -UseBasicParsing
+          $resp = Invoke-WebRequest "http://127.0.0.1:$port/latest.yml" -UseBasicParsing
           Write-Host "HTTP server response: $($resp.StatusCode)"
 
       - name: Adjust/Downgrade local podman desktop version
