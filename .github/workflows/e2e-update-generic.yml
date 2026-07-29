@@ -154,7 +154,7 @@ jobs:
             exit 1
           }
           # Replace GitHub provider with a generic provider pointing at the local server
-          $content = "provider: generic`nurl: $env:UPDATE_SERVER_URL`nupdaterCacheDirName: podman-desktop-updater"
+          $content = "provider: generic`nurl: $env:UPDATE_SERVER_URL`nupdaterCacheDirName: podman-desktop-updater`ntimeout: 10000"
           Set-Content -Path $updateFile -Value $content -ErrorAction Stop
           Write-Host "app-update.yml after update:"
           Get-Content $updateFile
