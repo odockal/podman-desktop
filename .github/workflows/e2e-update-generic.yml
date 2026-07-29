@@ -156,7 +156,6 @@ jobs:
           Start-Process -FilePath python `
             -ArgumentList "-m", "http.server", "$port", "--directory", "$assetPath" `
             -NoNewWindow
-          # Give the server a moment to bind
           Start-Sleep -Seconds 3
           echo "UPDATE_SERVER_URL=http://localhost:$port" >> $env:GITHUB_ENV
           # Smoke-check that the server is serving latest.yml
@@ -193,6 +192,22 @@ jobs:
 
       - name: Run E2E Update tests
         run: |
+          $assetPath = (Resolve-Path "update-release-assets").Path
+          $port = 8080
+          # test if previous http server survived
+          $resp = Invoke-WebRequest "http://localhost:$port/latest.yml" -UseBasicParsing
+          Write-Host "HTTP server response: $($resp.StatusCode)"
+          if ( "$($resp.StatusCode)" -ne "200" ) {
+            Write-Host "Starting http server again"
+            Start-Process -FilePath python `
+              -ArgumentList "-m", "http.server", "$port", "--directory", "$assetPath" `
+              -NoNewWindow
+            Start-Sleep -Seconds 3
+          }
+          echo "UPDATE_SERVER_URL=http://localhost:$port" >> $env:GITHUB_ENV
+          # Smoke-check that the server is serving latest.yml
+          $resp = Invoke-WebRequest "http://localhost:$port/latest.yml" -UseBasicParsing
+          Write-Host "HTTP server response: $($resp.StatusCode)"
           echo "$env:PODMAN_DESKTOP_BINARY"
           pnpm test:e2e:update:run
 
