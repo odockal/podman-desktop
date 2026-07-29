@@ -176,6 +176,24 @@ jobs:
           Start-Sleep -Seconds 3
           $resp = Invoke-WebRequest "http://127.0.0.1:8080/latest.yml" -UseBasicParsing -ErrorAction Stop
           Write-Host "Update server ready — HTTP $($resp.StatusCode)"
+          # Verify the server is reachable from Node.js (same runtime as E2E/Electron).
+          # This catches IPv4/IPv6 resolution mismatches that PowerShell won't expose.
+          node -e @"
+          const http = require('http');
+          http.get('http://127.0.0.1:8080/latest.yml', (res) => {
+            let data = '';
+            res.on('data', chunk => { data += chunk; });
+            res.on('end', () => {
+              console.log('Node.js HTTP check: status', res.statusCode);
+              console.log('Content preview:', data.slice(0, 300));
+              process.exit(res.statusCode === 200 ? 0 : 1);
+            });
+          }).on('error', err => {
+            console.error('Node.js HTTP check FAILED:', err.message);
+            process.exit(1);
+          });
+          "@
+          Write-Host "Node.js HTTP check passed"
           try {
             echo "$env:PODMAN_DESKTOP_BINARY }}"
             pnpm test:e2e:update:run
