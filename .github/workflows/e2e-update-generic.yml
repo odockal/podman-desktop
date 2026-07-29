@@ -149,19 +149,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Start local Python HTTP update server
-        run: |
-          $assetPath = (Resolve-Path "update-release-assets").Path
-          $port = 8080
-          Start-Process -FilePath python `
-            -ArgumentList "-m", "http.server", "$port", "--directory", "$assetPath" `
-            -NoNewWindow
-          Start-Sleep -Seconds 3
-          echo "UPDATE_SERVER_URL=http://localhost:$port" >> $env:GITHUB_ENV
-          # Smoke-check that the server is serving latest.yml
-          $resp = Invoke-WebRequest "http://localhost:$port/latest.yml" -UseBasicParsing
-          Write-Host "HTTP server response: $($resp.StatusCode)"
-
       - name: Adjust/Downgrade local podman desktop version
         run: node tests/playwright/scripts/version-util.cjs ./package.json --update
 
@@ -194,16 +181,11 @@ jobs:
         run: |
           $assetPath = (Resolve-Path "update-release-assets").Path
           $port = 8080
-          # test if previous http server survived
-          $resp = Invoke-WebRequest "http://localhost:$port/latest.yml" -UseBasicParsing
-          Write-Host "HTTP server response: $($resp.StatusCode)"
-          if ( "$($resp.StatusCode)" -ne "200" ) {
-            Write-Host "Starting http server again"
-            Start-Process -FilePath python `
-              -ArgumentList "-m", "http.server", "$port", "--directory", "$assetPath" `
-              -NoNewWindow
-            Start-Sleep -Seconds 3
-          }
+          Write-Host "Starting http server..."
+          Start-Process -FilePath python `
+            -ArgumentList "-m", "http.server", "$port", "--directory", "$assetPath" `
+            -NoNewWindow
+          Start-Sleep -Seconds 3
           echo "UPDATE_SERVER_URL=http://localhost:$port" >> $env:GITHUB_ENV
           # Smoke-check that the server is serving latest.yml
           $resp = Invoke-WebRequest "http://localhost:$port/latest.yml" -UseBasicParsing
