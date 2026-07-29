@@ -169,6 +169,7 @@ jobs:
       - name: Build Podman Desktop locally (win nsis)
         env:
           ELECTRON_ENABLE_INSPECT: true
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           pnpm compile:current --win nsis
           $runnerArch = $env:RUNNER_ARCH
@@ -396,6 +397,7 @@ jobs:
       - name: Build Podman Desktop locally (mac dmg)
         env:
           ELECTRON_ENABLE_INSPECT: true
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           pnpm compile:current --mac dmg
           dmgPath=$(find ./dist -maxdepth 1 -name "*.dmg" -print -quit)
