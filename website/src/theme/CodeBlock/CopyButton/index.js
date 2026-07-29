@@ -19,17 +19,11 @@
 import CopyButton from '@theme-original/CodeBlock/CopyButton';
 import React from 'react';
 
+import { stripPrompts } from './stripPrompts.js';
+
 // Update the CopyButton to remove the '$ ' or '# ' from the code
 export default function CopyButtonWrapper(props) {
-  const updatedProps = { ...props };
-  if (
-    updatedProps?.code?.length > 2 &&
-    (updatedProps.code.substring(0, 2) === '$ ' ||
-      updatedProps.code.substring(0, 2) === '# ' ||
-      updatedProps.code.substring(0, 2) === '> ')
-  ) {
-    updatedProps.code = updatedProps.code.substring(2);
-  }
+  const updatedProps = { ...props, code: stripPrompts(props.code) };
   return (
     <>
       <CopyButton {...updatedProps} />
