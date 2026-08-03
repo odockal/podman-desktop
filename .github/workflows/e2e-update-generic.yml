@@ -173,9 +173,23 @@ jobs:
             param($path, $port)
             python -m http.server $port --bind 127.0.0.1 --directory $path 2>&1
           } -ArgumentList $assetPath, 8080
-          Start-Sleep -Seconds 3
-          $resp = Invoke-WebRequest "http://127.0.0.1:8080/latest.yml" -UseBasicParsing -ErrorAction Stop
-          Write-Host "Update server ready — HTTP $($resp.StatusCode)"
+          $maxWait = 30
+          $waited = 0
+          do {
+            Start-Sleep -Seconds 1
+            $waited++
+            try {
+              $resp = Invoke-WebRequest "http://127.0.0.1:8080/latest.yml" -UseBasicParsing -ErrorAction Stop
+            } catch {
+              $resp = $null
+            }
+          } while ($null -eq $resp -and $waited -lt $maxWait)
+          if ($null -eq $resp) {
+            Write-Error "Update server did not become ready after ${maxWait}s"
+            Receive-Job $serverJob
+            exit 1
+          }
+          Write-Host "Update server ready after ${waited}s — HTTP $($resp.StatusCode)"
           # Verify the server is reachable from Node.js (same runtime as E2E/Electron).
           # This catches IPv4/IPv6 resolution mismatches that PowerShell won't expose.
           node -e @"
