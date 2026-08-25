@@ -2,3 +2,10 @@
 # Format: label=<extension.id>,name=<extensionName>
 # Optionally add version=<expected version> if it differs from the Podman Desktop version.
 label=podman-desktop.kind,name=kind
+label=redhat.bootc,name=Bootable Container,version=1.14.1
+label=redhat.rhel-vms,name=RHEL VMs,version=0.13.0
+label=redhat.redhat-sandbox,name=Developer Sandbox,version=0.1.0
+label=podman-desktop.grype,name=Grype,version=0.2.2
+label=redhat.hummingbird,name=Hummingbird,version=0.2.0
+label=redhat.redhat-authentication,name=Red Hat Authentication,version=1.2.1
+label=redhat.openshift-local,name=Red Hat OpenShift Local,version=2.4.0
