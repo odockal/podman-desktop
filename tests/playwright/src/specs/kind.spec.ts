@@ -255,6 +255,10 @@ test.describe('Kind End-to-End Tests', { tag: '@k8s_e2e' }, () => {
     .serial('Kind cluster creation with custom config file', () => {
       test('Create a Kind cluster using the custom config file', async ({ page }) => {
         test.setTimeout(CLUSTER_CREATION_TIMEOUT);
+        test.skip(
+          process.env.DEBUGGING_PORT !== undefined && process.env.PODMAN_DESKTOP_BINARY !== undefined,
+          'Test is not supported with CDP runner',
+        );
 
         await createKindCluster(page, CUSTOM_CONFIG_CLUSTER_NAME, CLUSTER_CREATION_TIMEOUT, {
           configFilePath: CUSTOM_CONFIG_FILE_PATH,
