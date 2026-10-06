@@ -327,9 +327,9 @@ test.describe('Extension search filtering', { tag: ['@smoke', '@windows_sanity',
       .toBeGreaterThan(0);
     const totalCards = await extensionsPage.countCatalogExtensionCards();
 
-    await extensionsPage.filterByName('Bootable Containers');
+    await extensionsPage.filterByName(catalogExtensionName);
     await playExpect
-      .poll(async () => await extensionsPage.extensionCardIsVisible('Bootable Containers'), { timeout: 10_000 })
+      .poll(async () => await extensionsPage.extensionCardIsVisible(catalogExtensionName), { timeout: 10_000 })
       .toBeTruthy();
     await playExpect
       .poll(async () => await extensionsPage.countCatalogExtensionCards(), { timeout: 10_000 })
