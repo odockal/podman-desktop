@@ -27,7 +27,34 @@ import { expect as playExpect, test } from '/@/utility/fixtures';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const DEFAULT_PREINSTALLED_FILE = path.resolve(__dirname, '..', '..', 'resources', 'preinstalled-extensions.txt');
+const DEFAULT_PREINSTALLED_FILE =
+  process.env.PRODUCT_TESTS === '1'
+    ? path.resolve(__dirname, '..', '..', 'resources', 'rh-preinstalled-extensions.txt')
+    : path.resolve(__dirname, '..', '..', 'resources', 'preinstalled-extensions.txt');
+const DEFAULT_CATALOG_JSON_FILE =
+  process.env.PRODUCT_TESTS === '1'
+    ? path.resolve(__dirname, '..', '..', 'resources', 'rh-catalog-filtering.json')
+    : path.resolve(__dirname, '..', '..', 'resources', 'catalog-filtering.json');
+
+interface CatalogExtension {
+  displayName: string;
+}
+
+function loadCatalogExtensionName(): string {
+  const defaultCatalogFile = process.env.CATALOG_JSON_FILE;
+  const catalogFile = defaultCatalogFile ?? DEFAULT_CATALOG_JSON_FILE;
+
+  // eslint-disable-next-line n/no-sync
+  const catalog = JSON.parse(readFileSync(catalogFile, 'utf-8')) as { extensions: CatalogExtension[] };
+  const extensionName = catalog.extensions[0]?.displayName;
+  if (!extensionName) {
+    throw new Error(`No extension displayName found in catalog file: ${catalogFile}`);
+  }
+
+  return extensionName;
+}
+
+const catalogExtensionName = loadCatalogExtensionName();
 
 interface PreInstalledExtension {
   label: string;
@@ -290,7 +317,7 @@ test.describe('Extension search filtering', { tag: ['@smoke', '@windows_sanity',
       .toBe(totalCards);
   });
 
-  test('Filter catalog extensions by name', async ({ navigationBar }) => {
+  test(`Filter catalog extension (${catalogExtensionName}) by name`, async ({ navigationBar }) => {
     const extensionsPage = await navigationBar.openExtensions();
     await playExpect(extensionsPage.heading).toBeVisible();
     await extensionsPage.openCatalogTab();
