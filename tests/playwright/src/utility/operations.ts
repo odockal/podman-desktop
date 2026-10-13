@@ -876,3 +876,20 @@ export function isPodmanCliVersionAtLeast(referenceVersion: string): boolean {
     return false;
   }
 }
+
+export async function handleUpdateDialog(page: Page, buttonName = 'Close'): Promise<void> {
+  const updateAvailableDialog = page.getByRole('dialog', { name: /Update .*Podman Desktop.*/ });
+  try {
+    await playExpect(updateAvailableDialog).toBeVisible({ timeout: 20_000 });
+  } catch {
+    console.log('No update dialog shown, continuing with the test');
+    return;
+  }
+
+  // The dialog is visible at this point -- any failure dismissing it is a real
+  // problem and should fail the test, not be silently swallowed as "no dialog shown".
+  const closeButton = updateAvailableDialog.getByRole('button', { name: buttonName });
+  await playExpect(closeButton).toBeVisible();
+  await closeButton.click();
+  await playExpect(updateAvailableDialog).not.toBeVisible();
+}

@@ -22,22 +22,14 @@ import path from 'node:path';
 import { NavigationBar } from '/@/model/workbench/navigation';
 import { ElectronRunner } from '/@/runner/electron-runner';
 import { expect as playExpect, test } from '/@/utility/fixtures';
+import { handleUpdateDialog } from '/@/utility/operations';
 import { isCI, isLinux, isMac, isWindows } from '/@/utility/platform';
 
 test.skip(isLinux, 'Podman installation is not supported on Linux');
 
 test.beforeAll(async ({ page, runner, welcomePage }) => {
   runner.setVideoAndTraceName('podman-install-e2e');
-  const updateAvailableDialog = page.getByRole('dialog', { name: /Update .*Podman Desktop.*/ });
-  try {
-    await playExpect(updateAvailableDialog).toBeVisible({ timeout: 20_000 });
-    const closeButton = updateAvailableDialog.getByRole('button', { name: 'Close' });
-    await playExpect(closeButton).toBeVisible();
-    await closeButton.click();
-    await playExpect(updateAvailableDialog).not.toBeVisible();
-  } catch (error) {
-    console.log('No update dialog shown, continuing with the test');
-  }
+  await handleUpdateDialog(page);
   await welcomePage.handleWelcomePage(true);
 });
 
